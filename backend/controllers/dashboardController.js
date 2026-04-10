@@ -12,13 +12,18 @@ const getStats = (req, res) => {
 
   const sumActive = filtered.reduce((acc, m) => acc + (m.activeUsers || 0), 0);
   const sumTotalUsers = 15; // Fixed based on dataset
-  const sumConvos = filtered.reduce((acc, m) => acc + (m.conversations || 0), 0);
+  const sumConvos = filtered.reduce(
+    (acc, m) => acc + (m.conversations || 0),
+    0,
+  );
   const sumHandovers = filtered.reduce((acc, m) => acc + (m.handovers || 0), 0);
 
   const engagementRate = Math.round(
-    (sumActive / (sumTotalUsers * Math.max(1, filtered.length))) * 100
+    (sumActive / (sumTotalUsers * Math.max(1, filtered.length))) * 100,
   );
-  const handoverRate = Math.round((sumHandovers / Math.max(1, sumConvos)) * 100);
+  const handoverRate = Math.round(
+    (sumHandovers / Math.max(1, sumConvos)) * 100,
+  );
 
   let handoverBadge = "Good";
   if (handoverRate > 25) handoverBadge = "Bad";
@@ -60,16 +65,24 @@ const getPeakUsage = (req, res) => {
   });
 
   let grouped = [];
-  const diffDays = filtered.length;
+  let diffDays = filtered.length;
+
+  if (start && end) {
+    const s = new Date(start);
+    const e = new Date(end);
+    diffDays = Math.ceil((e - s) / (1000 * 60 * 60 * 24)) + 1;
+  }
 
   if (diffDays <= 1) {
+    // Single day → hourly breakdown
     const hourly = filtered[0]?.hourlyDistribution || [];
     grouped = hourly.map((h) => ({
       ...h,
       viewType: "Hourly View",
       hoverLabel: `Hourly - ${h.label}`,
     }));
-  } else if (diffDays <= 7) {
+  } else if (diffDays <= 14) {
+    // Up to 2 weeks → show every day individually
     grouped = filtered.map((m, i) => {
       const dateStr = new Date(m.date).toLocaleDateString("en-US", {
         weekday: "long",
@@ -78,23 +91,30 @@ const getPeakUsage = (req, res) => {
         year: "numeric",
       });
       return {
-        label: new Date(m.date).toLocaleDateString("en-US", { weekday: "short" }),
+        label: new Date(m.date).toLocaleDateString("en-US", {
+          weekday: "short",
+        }),
         ...m.usageDistribution,
         viewType: "Daily View",
         hoverLabel: `Day ${i + 1} - ${dateStr}`,
       };
     });
-  } else if (diffDays <= 31) {
-    for (let i = 0; i < filtered.length; i += 7) {
-      const chunk = filtered.slice(i, i + 7);
+  } else if (diffDays <= 84) {
+    // 15–84 days (up to ~3 months) → Group by strict 7-day weeks
+    const CHUNK = 7;
+    for (let i = 0; i < filtered.length; i += CHUNK) {
+      const chunk = filtered.slice(i, i + CHUNK);
       const low = Math.round(
-        chunk.reduce((a, c) => a + c.usageDistribution.low, 0) / chunk.length
+        chunk.reduce((a, c) => a + (c.usageDistribution.low || 0), 0) /
+          chunk.length,
       );
       const med = Math.round(
-        chunk.reduce((a, c) => a + c.usageDistribution.medium, 0) / chunk.length
+        chunk.reduce((a, c) => a + (c.usageDistribution.medium || 0), 0) /
+          chunk.length,
       );
       const high = Math.round(
-        chunk.reduce((a, c) => a + c.usageDistribution.high, 0) / chunk.length
+        chunk.reduce((a, c) => a + (c.usageDistribution.high || 0), 0) /
+          chunk.length,
       );
 
       const fromDate = new Date(chunk[0].date).toLocaleDateString("en-US", {
@@ -103,19 +123,21 @@ const getPeakUsage = (req, res) => {
       });
       const toDate = new Date(chunk[chunk.length - 1].date).toLocaleDateString(
         "en-US",
-        { month: "short", day: "numeric" }
+        { month: "short", day: "numeric" },
       );
+      const weekNum = Math.floor(i / CHUNK) + 1;
 
       grouped.push({
-        label: `Week ${Math.floor(i / 7) + 1}`,
+        label: `W${weekNum}`, // Short label "W1", "W2" for the axis
         low,
         medium: med,
         high,
         viewType: "Weekly View",
-        hoverLabel: `Week ${Math.floor(i / 7) + 1} From ${fromDate} to ${toDate}`,
+        hoverLabel: `Week ${weekNum}: ${fromDate} – ${toDate} (${chunk.length} days)`,
       });
     }
-  } else if (diffDays <= 365) {
+  } else if (diffDays <= 730) {
+    // 85–730 days (up to 2 years) → monthly grouping
     const months = {};
     filtered.forEach((m) => {
       const monthDesc = new Date(m.date).toLocaleDateString("en-US", {
@@ -127,10 +149,16 @@ const getPeakUsage = (req, res) => {
         year: "2-digit",
       });
       if (!months[month])
-        months[month] = { low: 0, med: 0, high: 0, count: 0, hoverLabel: monthDesc };
-      months[month].low += m.usageDistribution.low;
-      months[month].med += m.usageDistribution.medium;
-      months[month].high += m.usageDistribution.high;
+        months[month] = {
+          low: 0,
+          med: 0,
+          high: 0,
+          count: 0,
+          hoverLabel: monthDesc,
+        };
+      months[month].low += m.usageDistribution.low || 0;
+      months[month].med += m.usageDistribution.medium || 0;
+      months[month].high += m.usageDistribution.high || 0;
       months[month].count++;
     });
     grouped = Object.keys(months).map((m) => ({
@@ -142,13 +170,14 @@ const getPeakUsage = (req, res) => {
       hoverLabel: `Month of ${months[m].hoverLabel}`,
     }));
   } else {
+    // > 730 days → yearly grouping
     const years = {};
     filtered.forEach((m) => {
       const year = new Date(m.date).getFullYear().toString();
       if (!years[year]) years[year] = { low: 0, med: 0, high: 0, count: 0 };
-      years[year].low += m.usageDistribution.low;
-      years[year].med += m.usageDistribution.medium;
-      years[year].high += m.usageDistribution.high;
+      years[year].low += m.usageDistribution.low || 0;
+      years[year].med += m.usageDistribution.medium || 0;
+      years[year].high += m.usageDistribution.high || 0;
       years[year].count++;
     });
     grouped = Object.keys(years).map((y) => ({
@@ -180,7 +209,7 @@ const getFaqs = (req, res) => {
 
   if (start && end) {
     const diffDays = Math.round((new Date(end) - new Date(start)) / 86400000);
-    if (diffDays > 365 && db.faqsYearly) {
+    if (diffDays > 730 && db.faqsYearly) {
       faqs = db.faqsYearly;
     } else if (diffDays > 14 && db.faqsMonthly) {
       faqs = db.faqsMonthly;

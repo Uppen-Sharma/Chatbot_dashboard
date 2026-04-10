@@ -38,6 +38,8 @@ export default function Dashboard() {
     endDate,
     setEndDate,
     deleteUser,
+    DEFAULT_START,
+    DEFAULT_END,
   } = useDashboard();
 
   const [isPickerOpen, setIsPickerOpen] = React.useState(false);
@@ -49,15 +51,17 @@ export default function Dashboard() {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
         if (isPickerOpen) {
-          setStartDate(tempStart);
-          setEndDate(tempEnd);
+          const finalStart = tempStart || DEFAULT_START;
+          const finalEnd = tempEnd || DEFAULT_END;
+          setStartDate(finalStart);
+          setEndDate(finalEnd);
           setIsPickerOpen(false);
         }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isPickerOpen, tempStart, tempEnd, setStartDate, setEndDate]);
+  }, [isPickerOpen, tempStart, tempEnd, setStartDate, setEndDate, DEFAULT_START, DEFAULT_END]);
 
   const handleOpenPicker = () => {
     setTempStart(startDate);
@@ -67,8 +71,10 @@ export default function Dashboard() {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      setStartDate(tempStart);
-      setEndDate(tempEnd);
+      const finalStart = tempStart || DEFAULT_START;
+      const finalEnd = tempEnd || DEFAULT_END;
+      setStartDate(finalStart);
+      setEndDate(finalEnd);
       setIsPickerOpen(false);
     }
   };
@@ -207,7 +213,7 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Chat overlays and panels remain identical */}
+      {/* Chat overlays and panels */}
       <div
         className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300"
         style={{

@@ -1,5 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { getStats, getPeakUsage, getFaqs, getUsers, deleteUser as apiDeleteUser } from "../../services/apiClient";
+import {
+  getStats,
+  getPeakUsage,
+  getFaqs,
+  getUsers,
+  deleteUser as apiDeleteUser,
+} from "../../services/apiClient";
 
 function parseDuration(str = "") {
   const minSec = str?.match(/(\d+)m\s*(\d+)s/);
@@ -18,9 +24,12 @@ export function useDashboard() {
   const [faqData, setFaqData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // NEW: Date Range States
-  const [startDate, setStartDate] = useState("2026-03-01");
-  const [endDate, setEndDate] = useState("2026-03-31");
+  // Date Range States
+  const DEFAULT_START = "2026-01-01";
+  const DEFAULT_END = "2026-03-01";
+
+  const [startDate, setStartDate] = useState(DEFAULT_START);
+  const [endDate, setEndDate] = useState(DEFAULT_END);
 
   // UI States
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,7 +41,7 @@ export function useDashboard() {
     typeof window !== "undefined" ? window.innerWidth : 1024,
   );
 
-  // 1. PRIMARY DATA HANDLER: Fetches all data based on date range
+  // Fetch all data based on date range
   useEffect(() => {
     // We only fetch if we have both dates
     if (!startDate || !endDate) return;
@@ -46,13 +55,13 @@ export function useDashboard() {
           getPeakUsage(startDate, endDate),
           getFaqs(startDate, endDate),
           // Users is independent but we fetch it if it's the first load
-          userData.length === 0 ? getUsers() : null
+          userData.length === 0 ? getUsers() : null,
         ]);
 
         setDashboardStats(await statsRes.json());
         setChartData(await chartRes.json());
         setFaqData(await faqRes.json());
-        
+
         if (usersRes) {
           setUserData(await usersRes.json());
         }
@@ -66,7 +75,6 @@ export function useDashboard() {
     fetchData();
   }, [startDate, endDate]); // Re-run whenever dates change
 
-  // ... (Keep all your existing resizing and sorting logic exactly the same below here)
   useEffect(() => {
     let timer;
     const onResize = () => {
@@ -162,7 +170,10 @@ export function useDashboard() {
   }, [isChatOpen, closeChat]);
 
   const deleteUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to permanently delete this user?")) return;
+    if (
+      !window.confirm("Are you sure you want to permanently delete this user?")
+    )
+      return;
     try {
       const res = await apiDeleteUser(userId);
       if (res.ok) {
@@ -203,5 +214,7 @@ export function useDashboard() {
     endDate,
     setEndDate,
     deleteUser,
+    DEFAULT_START,
+    DEFAULT_END,
   };
 }
