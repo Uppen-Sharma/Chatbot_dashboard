@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   getStats,
   getPeakUsage,
@@ -6,6 +6,10 @@ import {
   getUsers,
   deleteUser as apiDeleteUser,
 } from "../../services/apiClient";
+
+// Constants defined outside the hook so they're not recreated on every render
+export const DEFAULT_START = "2026-01-01";
+export const DEFAULT_END = "2026-03-01";
 
 function parseDuration(str = "") {
   const minSec = str?.match(/(\d+)m\s*(\d+)s/);
@@ -22,12 +26,12 @@ export function useDashboard() {
   const [dashboardStats, setDashboardStats] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [faqData, setFaqData] = useState([]);
+
+  // Added isError state (was destructured in Dashboard.jsx but never returned)
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   // Date Range States
-  const DEFAULT_START = "2026-01-01";
-  const DEFAULT_END = "2026-03-01";
-
   const [startDate, setStartDate] = useState(DEFAULT_START);
   const [endDate, setEndDate] = useState(DEFAULT_END);
 
@@ -41,39 +45,49 @@ export function useDashboard() {
     typeof window !== "undefined" ? window.innerWidth : 1024,
   );
 
-  // Fetch all data based on date range
+  // Fetch users once on mount, independent of date range
   useEffect(() => {
-    // We only fetch if we have both dates
+    getUsers()
+      .then((data) => setUserData(data))
+      .catch((err) => console.error("Failed to fetch users:", err));
+  }, []);
+
+  // Debounce date changes so rapid input doesn't fire multiple requests
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
     if (!startDate || !endDate) return;
 
-    const fetchData = async () => {
+    // Clear any pending fetch before scheduling a new one
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
       try {
         setIsLoading(true);
-        // Stats, Charts, and FAQs are always range-driven
-        const [statsRes, chartRes, faqRes, usersRes] = await Promise.all([
+        setIsError(false);
+
+        // apiClient now returns parsed JSON directly — no .json() needed
+        const [statsData, chartRes, faqRes] = await Promise.all([
           getStats(startDate, endDate),
           getPeakUsage(startDate, endDate),
           getFaqs(startDate, endDate),
-          // Users is independent but we fetch it if it's the first load
-          userData.length === 0 ? getUsers() : null,
         ]);
 
-        setDashboardStats(await statsRes.json());
-        setChartData(await chartRes.json());
-        setFaqData(await faqRes.json());
-
-        if (usersRes) {
-          setUserData(await usersRes.json());
-        }
+        setDashboardStats(statsData);
+        setChartData(chartRes);
+        setFaqData(faqRes);
       } catch (error) {
         console.error("Trouble fetching dashboard data:", error);
+        setIsError(true); // actually set error state
       } finally {
         setIsLoading(false);
       }
-    };
+    }, 350); // 350ms debounce
 
-    fetchData();
-  }, [startDate, endDate]); // Re-run whenever dates change
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [startDate, endDate]);
 
   useEffect(() => {
     let timer;
@@ -175,13 +189,12 @@ export function useDashboard() {
     )
       return;
     try {
-      const res = await apiDeleteUser(userId);
-      if (res.ok) {
-        setUserData((prev) => prev.filter((u) => u.id !== userId));
-        if (selectedUser?.id === userId) closeChat();
-      }
+      await apiDeleteUser(userId);
+      setUserData((prev) => prev.filter((u) => u.id !== userId));
+      if (selectedUser?.id === userId) closeChat();
     } catch (e) {
       console.error("Delete failed:", e);
+      alert("Failed to delete user. Please try again.");
     }
   };
 
@@ -209,6 +222,7 @@ export function useDashboard() {
     chartData,
     faqData,
     isLoading,
+    isError, // now actually returned
     startDate,
     setStartDate,
     endDate,

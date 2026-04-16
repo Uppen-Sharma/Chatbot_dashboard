@@ -101,7 +101,10 @@ export default function PeakUsage({ chartData = [], faqData = [] }) {
                 data.val3 === peakPoint.val3 && data.label === peakPoint.label;
 
               // Layered heights based on cumulative stacking
-              const totalH = Math.min(100, (data.val1 || 0) + (data.val2 || 0) + (data.val3 || 0));
+              const totalH = Math.min(
+                100,
+                (data.val1 || 0) + (data.val2 || 0) + (data.val3 || 0),
+              );
               const medH = Math.min(100, (data.val2 || 0) + (data.val3 || 0));
               const highH = Math.min(100, data.val3 || 0);
 
@@ -120,7 +123,7 @@ export default function PeakUsage({ chartData = [], faqData = [] }) {
                   >
                     {/* Peak Glow */}
                     {isPeak && (
-                      <div 
+                      <div
                         className="absolute w-2 h-2 rounded-full bg-[#007BC6] animate-pulse z-20"
                         style={{ bottom: `${totalH}%`, marginBottom: 8 }}
                       />
@@ -145,7 +148,7 @@ export default function PeakUsage({ chartData = [], faqData = [] }) {
 
                   {/* X-Axis Label */}
                   <div className="absolute -bottom-7 w-full flex justify-center">
-                    <span 
+                    <span
                       className={`text-[10px] font-bold uppercase tracking-wider transition-colors duration-200 ${isPeak ? "text-[#007BC6]" : "text-gray-400"}`}
                     >
                       {data.label}

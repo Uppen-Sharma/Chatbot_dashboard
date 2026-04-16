@@ -1,5 +1,5 @@
 import React from "react";
-import { Globe, ChevronDown, CalendarDays } from "lucide-react";
+import { Globe, ChevronDown, CalendarDays, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { useDashboard } from "./hooks/useDashboard";
@@ -32,7 +32,7 @@ export default function Dashboard() {
     chartData,
     faqData,
     isLoading,
-    isError,
+    isError, // now properly used
     startDate,
     setStartDate,
     endDate,
@@ -53,15 +53,29 @@ export default function Dashboard() {
         if (isPickerOpen) {
           const finalStart = tempStart || DEFAULT_START;
           const finalEnd = tempEnd || DEFAULT_END;
-          setStartDate(finalStart);
-          setEndDate(finalEnd);
+
+          // Only update state (and trigger re-fetch) if dates actually changed
+          if (finalStart !== startDate || finalEnd !== endDate) {
+            setStartDate(finalStart);
+            setEndDate(finalEnd);
+          }
           setIsPickerOpen(false);
         }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isPickerOpen, tempStart, tempEnd, setStartDate, setEndDate, DEFAULT_START, DEFAULT_END]);
+  }, [
+    isPickerOpen,
+    tempStart,
+    tempEnd,
+    setStartDate,
+    setEndDate,
+    DEFAULT_START,
+    DEFAULT_END,
+    startDate,
+    endDate,
+  ]);
 
   const handleOpenPicker = () => {
     setTempStart(startDate);
@@ -73,12 +87,18 @@ export default function Dashboard() {
     if (e.key === "Enter") {
       const finalStart = tempStart || DEFAULT_START;
       const finalEnd = tempEnd || DEFAULT_END;
-      setStartDate(finalStart);
-      setEndDate(finalEnd);
+
+      // Same guard — only update if changed
+      if (finalStart !== startDate || finalEnd !== endDate) {
+        setStartDate(finalStart);
+        setEndDate(finalEnd);
+      }
       setIsPickerOpen(false);
     }
   };
 
+  //this auth uses localStorage which can be spoofed in devtools.
+  //For production, validate a signed token server-side instead.
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
     navigate("/login");
@@ -90,6 +110,30 @@ export default function Dashboard() {
         <p className="text-gray-500 font-medium animate-pulse">
           Loading your live dashboard...
         </p>
+      </div>
+    );
+  }
+
+  // Show error state when fetch fails
+  if (isError && (!dashboardStats || dashboardStats.length === 0)) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 flex flex-col items-center gap-3 max-w-sm text-center">
+          <AlertCircle size={32} className="text-red-400" />
+          <p className="text-gray-700 font-semibold">
+            Failed to load dashboard
+          </p>
+          <p className="text-gray-500 text-sm">
+            Could not reach the server. Please check your connection and try
+            again.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-5 py-2 bg-[#007BC6] text-white text-sm font-semibold rounded-full hover:bg-[#006ba8] transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -142,7 +186,7 @@ export default function Dashboard() {
             Performance Dashboard
           </h1>
           <div className="relative group z-50" ref={pickerRef}>
-            <div 
+            <div
               onClick={handleOpenPicker}
               className="bg-white px-5 py-2.5 rounded-full border border-[#E7E9F0] shadow-sm flex items-center justify-center gap-3 hover:shadow-xl hover:shadow-[#94A3B8]/10 hover:-translate-y-1 transition-all duration-300 hover:border-[#94A3B8]/50 cursor-pointer"
             >
@@ -152,15 +196,19 @@ export default function Dashboard() {
               />
               <span className="text-gray-500 font-bold mb-0.5">:</span>
               <span className="text-xs font-semibold text-black tracking-wide">
-                {startDate ? startDate.split("-").reverse().join("-") : ""} <span className="text-gray-500 mx-1">to</span> {endDate ? endDate.split("-").reverse().join("-") : ""}
+                {startDate ? startDate.split("-").reverse().join("-") : ""}{" "}
+                <span className="text-gray-500 mx-1">to</span>{" "}
+                {endDate ? endDate.split("-").reverse().join("-") : ""}
               </span>
             </div>
-            
+
             {isPickerOpen && (
               <div className="absolute left-0 w-full top-full mt-2 bg-white border border-[#E7E9F0] rounded-2xl p-4 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">From</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                      From
+                    </label>
                     <input
                       type="date"
                       max={new Date().toISOString().split("T")[0]}
@@ -171,7 +219,9 @@ export default function Dashboard() {
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">To</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                      To
+                    </label>
                     <input
                       type="date"
                       max={new Date().toISOString().split("T")[0]}
@@ -187,14 +237,26 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Show a subtle "refreshing" indicator during date-range re-fetches */}
+        {isLoading && dashboardStats.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-[#007BC6] font-semibold -mb-2 animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#007BC6] inline-block" />
+            Refreshing data...
+          </div>
+        )}
+
         <div className="delay-100 animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-both">
-          <StatCards stats={dashboardStats} />
+          <StatCards
+            stats={dashboardStats}
+            isLoading={isLoading && dashboardStats.length === 0}
+          />
         </div>
 
         <div className="delay-200 animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-both">
           <PeakUsage
             chartData={chartData}
             faqData={faqData}
+            isLoading={isLoading && chartData.length === 0}
           />
         </div>
 

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, ChevronRight } from "lucide-react";
+// Use the shared apiClient instead of raw fetch with a hardcoded URL
+import { getUserChats } from "../../services/apiClient";
 
 export default function ChatListPanel({
   selectedUser,
@@ -9,18 +11,26 @@ export default function ChatListPanel({
 }) {
   const [chats, setChats] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  // Track fetch errors separately so we can show a distinct message
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
-    if (selectedUser) {
-      setIsLoading(true);
-      fetch(`http://localhost:5000/api/users/${selectedUser.id}/chats`)
-        .then((res) => res.json())
-        .then((data) => {
-          setChats(data);
-          setIsLoading(false);
-        })
-        .catch((err) => console.error(err));
-    }
+    if (!selectedUser) return;
+
+    setIsLoading(true);
+    setFetchError(false);
+    setChats([]);
+
+    getUserChats(selectedUser.id)
+      .then((data) => {
+        setChats(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load chats:", err);
+        setFetchError(true);
+        setIsLoading(false);
+      });
   }, [selectedUser]);
 
   return (
@@ -54,6 +64,11 @@ export default function ChatListPanel({
         {isLoading ? (
           <div className="p-5 text-center text-gray-500 text-sm font-normal">
             Loading chats...
+          </div>
+        ) : fetchError ? (
+          // Distinct error state vs empty state
+          <div className="p-5 text-center text-red-400 text-sm font-normal">
+            Could not load chats. Please try again.
           </div>
         ) : chats.length === 0 ? (
           <div className="p-5 text-center text-gray-500 text-sm font-normal">

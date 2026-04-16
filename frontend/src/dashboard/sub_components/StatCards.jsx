@@ -7,7 +7,34 @@ const ICON_MAP = {
   Lightbulb: Lightbulb,
 };
 
-export default function StatCards({ stats = [] }) {
+// Skeleton card for initial load
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-2xl p-5 border border-[#E7E9F0] shadow-sm flex flex-col justify-between h-[110px]">
+      <div className="flex justify-between items-start">
+        <div className="h-4 w-28 bg-gray-100 rounded-full animate-pulse" />
+        <div className="w-8 h-8 bg-gray-100 rounded-full animate-pulse" />
+      </div>
+      <div className="flex items-baseline gap-2 mt-auto">
+        <div className="h-7 w-20 bg-gray-100 rounded-full animate-pulse" />
+        <div className="h-4 w-24 bg-gray-100 rounded-full animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+export default function StatCards({ stats = [], isLoading = false }) {
+  // Show skeleton placeholders while fetching for the first time
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+    );
+  }
+
   if (!stats || stats.length === 0) return null;
 
   return (
@@ -58,7 +85,6 @@ export default function StatCards({ stats = [] }) {
                   </span>
                 </div>
               ) : card.badge ? (
-                // --- NEW: Dynamic Color Badges for Handover Rate ---
                 <div className="flex items-center gap-2 ml-2 px-2.5 py-1">
                   <div
                     className={`w-1.5 h-1.5 rounded-full ${
@@ -68,7 +94,7 @@ export default function StatCards({ stats = [] }) {
                           ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"
                           : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
                     }`}
-                  ></div>
+                  />
                   <span className="text-[11px] font-semibold tracking-wide uppercase text-gray-600">
                     {card.badge}
                   </span>

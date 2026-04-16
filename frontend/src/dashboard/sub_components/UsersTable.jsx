@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Star,
   Trash2,
@@ -7,8 +7,41 @@ import {
   ChevronUp,
   ChevronDown,
   Users,
+  AlertTriangle,
 } from "lucide-react";
 import { generatePages } from "../utils/helpers";
+
+// Inline delete confirmation popover — replaces jarring window.confirm
+function DeleteConfirm({ userName, onConfirm, onCancel }) {
+  return (
+    <div
+      className="absolute right-0 top-full mt-1 z-30 bg-white border border-red-100 rounded-xl shadow-xl p-3 flex flex-col gap-2 min-w-[180px]"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-start gap-2">
+        <AlertTriangle size={14} className="text-red-400 mt-0.5 shrink-0" />
+        <p className="text-xs text-gray-600 leading-snug">
+          Delete <span className="font-semibold text-black">{userName}</span>?
+          This cannot be undone.
+        </p>
+      </div>
+      <div className="flex gap-1.5">
+        <button
+          onClick={onCancel}
+          className="flex-1 py-1 px-2 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={onConfirm}
+          className="flex-1 py-1 px-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function UsersTable({
   openChat,
@@ -22,6 +55,8 @@ export default function UsersTable({
   deleteUser,
 }) {
   const pages = generatePages(currentPage, totalPages);
+  // Track which user has the delete confirm open
+  const [confirmingUserId, setConfirmingUserId] = useState(null);
 
   const SortIcon = ({ col }) => {
     const activeItem = sortConfig.find((item) => item.key === col);
@@ -109,7 +144,12 @@ export default function UsersTable({
                 <tr
                   key={user.id}
                   className="hover:bg-gray-50 transition cursor-pointer group"
-                  onClick={() => openChat(user)}
+                  onClick={() => {
+                    // Close any open confirm popover when clicking elsewhere on the row
+                    if (confirmingUserId === user.id) return;
+                    setConfirmingUserId(null);
+                    openChat(user);
+                  }}
                 >
                   <td className="px-6 py-2 transition-colors">
                     <div className="font-normal text-black text-base">
@@ -163,17 +203,37 @@ export default function UsersTable({
                     </div>
                   </td>
                   <td className="px-6 py-2 text-center">
-                    <div className="flex items-center justify-center">
+                    {/* Inline confirm popover */}
+                    <div className="flex items-center justify-center relative">
                       <button
                         aria-label={`Delete ${user.name}`}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-white rounded-full hover:shadow-xl hover:shadow-red-500/10 hover:-translate-y-1 transition-all duration-300 hover:border-red-200 border border-transparent"
+                        className={`p-2 rounded-full border transition-all duration-300 ${
+                          confirmingUserId === user.id
+                            ? "text-red-500 bg-white shadow-xl shadow-red-500/10 border-red-200 -translate-y-1"
+                            : "text-gray-400 hover:text-red-500 hover:bg-white hover:shadow-xl hover:shadow-red-500/10 hover:-translate-y-1 border-transparent hover:border-red-200"
+                        }`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          deleteUser(user.id);
+                          setConfirmingUserId(
+                            confirmingUserId === user.id ? null : user.id,
+                          );
                         }}
                       >
                         <Trash2 size={16} />
                       </button>
+
+                      {confirmingUserId === user.id && (
+                        <DeleteConfirm
+                          userName={user.name}
+                          onConfirm={() => {
+                            setConfirmingUserId(null);
+                            deleteUser(user.id);
+                          }}
+                          onCancel={(e) => {
+                            setConfirmingUserId(null);
+                          }}
+                        />
+                      )}
                     </div>
                   </td>
                 </tr>
