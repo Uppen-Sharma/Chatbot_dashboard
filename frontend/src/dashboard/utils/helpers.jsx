@@ -19,6 +19,7 @@ export const generatePages = (currentPage, totalPages) => {
 
 // Lightweight markdown parser for bold text conversion
 export const parseBold = (str) => {
+  if (!str) return null;
   const parts = str.split(/(\*\*.*?\*\*)/g);
   return parts.map((part, i) =>
     part.startsWith('**') && part.endsWith('**') ? (

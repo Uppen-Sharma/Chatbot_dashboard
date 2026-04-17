@@ -1,6 +1,7 @@
 import React from "react";
 import { Globe, ChevronDown, CalendarDays, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast, Toaster } from "react-hot-toast";
 
 import { useDashboard } from "./hooks/useDashboard";
 import StatCards from "./sub_components/StatCards";
@@ -32,7 +33,8 @@ export default function Dashboard() {
     chartData,
     faqData,
     isLoading,
-    isError, // now properly used
+    isUsersLoading,
+    isError,
     startDate,
     setStartDate,
     endDate,
@@ -51,10 +53,25 @@ export default function Dashboard() {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
         if (isPickerOpen) {
-          const finalStart = tempStart || DEFAULT_START;
-          const finalEnd = tempEnd || DEFAULT_END;
+          let hasFallback = false;
+          let finalStart = tempStart;
+          let finalEnd = tempEnd;
 
-          // Only update state (and trigger re-fetch) if dates actually changed
+          if (!finalStart) {
+            finalStart = DEFAULT_START;
+            hasFallback = true;
+          }
+          if (!finalEnd) {
+            finalEnd = DEFAULT_END;
+            hasFallback = true;
+          }
+
+          if (hasFallback) {
+            toast.error(
+              "Invalid or missing date entered! Reverting to default date range.",
+            );
+          }
+
           if (finalStart !== startDate || finalEnd !== endDate) {
             setStartDate(finalStart);
             setEndDate(finalEnd);
@@ -85,10 +102,25 @@ export default function Dashboard() {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      const finalStart = tempStart || DEFAULT_START;
-      const finalEnd = tempEnd || DEFAULT_END;
+      let hasFallback = false;
+      let finalStart = tempStart;
+      let finalEnd = tempEnd;
 
-      // Same guard — only update if changed
+      if (!finalStart) {
+        finalStart = DEFAULT_START;
+        hasFallback = true;
+      }
+      if (!finalEnd) {
+        finalEnd = DEFAULT_END;
+        hasFallback = true;
+      }
+
+      if (hasFallback) {
+        toast.error(
+          "Invalid or missing date entered! Reverting to default date range.",
+        );
+      }
+
       if (finalStart !== startDate || finalEnd !== endDate) {
         setStartDate(finalStart);
         setEndDate(finalEnd);
@@ -114,7 +146,6 @@ export default function Dashboard() {
     );
   }
 
-  // Show error state when fetch fails
   if (isError && (!dashboardStats || dashboardStats.length === 0)) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
@@ -186,6 +217,23 @@ export default function Dashboard() {
             Performance Dashboard
           </h1>
           <div className="relative group z-50" ref={pickerRef}>
+            <Toaster
+              containerStyle={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                width: "max-content",
+                zIndex: 9999,
+                marginTop: "16px",
+              }}
+              toastOptions={{
+                className: "text-sm font-semibold text-center",
+                duration: 3000,
+                style: {
+                  minWidth: "380px",
+                },
+              }}
+            />
             <div
               onClick={handleOpenPicker}
               className="bg-white px-5 py-2.5 rounded-full border border-[#E7E9F0] shadow-sm flex items-center justify-center gap-3 hover:shadow-xl hover:shadow-[#94A3B8]/10 hover:-translate-y-1 transition-all duration-300 hover:border-[#94A3B8]/50 cursor-pointer"
@@ -271,6 +319,7 @@ export default function Dashboard() {
             sortConfig={sortConfig}
             handleSort={handleSort}
             deleteUser={deleteUser}
+            isLoading={isUsersLoading}
           />
         </div>
       </main>

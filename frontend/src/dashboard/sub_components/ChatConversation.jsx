@@ -3,7 +3,7 @@ import { X, MessageSquare } from "lucide-react";
 import { parseBold } from "../utils/helpers";
 import { getChatMessages } from "../../services/apiClient";
 
-// Memoized message bubble so parseBold doesn't re-run on unrelated re-renders
+// Memoized message bubble
 const MessageBubble = React.memo(({ message }) => (
   <div
     className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
@@ -33,7 +33,7 @@ export default function ChatConversation({
   // Separate error state for message loading
   const [fetchError, setFetchError] = useState(false);
 
-  // apiClient now returns parsed JSON directly — no .json() call needed
+
   useEffect(() => {
     if (!activeChatId) return;
 

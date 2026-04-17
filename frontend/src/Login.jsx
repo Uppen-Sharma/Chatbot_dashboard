@@ -56,7 +56,7 @@ export default function Login() {
             </label>
             <input
               id="email"
-              type="text"
+              type="email"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);

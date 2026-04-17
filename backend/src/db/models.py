@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, JSON
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Text, JSON
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 
@@ -60,7 +60,7 @@ class Feedback(Base):
     message_id = Column(String(100), nullable=False)
     conversation_id = Column(String(100), nullable=True)
     user_email = Column(String(255), nullable=True)
-    feedback_type = Column(String(20), nullable=False)  # Using String for simplicity with the Enum requirement
-    rating = Column(Integer, nullable=True)
+    # Matches the DB enum('like','dislike') exactly
+    feedback_type = Column(Enum("like", "dislike"), nullable=False)
     comment = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())

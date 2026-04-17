@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { generatePages } from "../utils/helpers";
 
-// Inline delete confirmation popover — replaces jarring window.confirm
+// Inline delete confirmation popover
 function DeleteConfirm({ userName, onConfirm, onCancel }) {
   return (
     <div
@@ -53,6 +53,7 @@ export default function UsersTable({
   sortConfig,
   handleSort,
   deleteUser,
+  isLoading,
 }) {
   const pages = generatePages(currentPage, totalPages);
   // Track which user has the delete confirm open
@@ -126,7 +127,18 @@ export default function UsersTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E7E9F0]">
-            {users.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-16 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <span className="w-6 h-6 border-2 border-[#E7E9F0] border-t-[#007BC6] rounded-full animate-spin" />
+                    <p className="text-gray-500 text-sm font-semibold animate-pulse">
+                      Loading users...
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            ) : users.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-16 text-center">
                   <div className="flex flex-col items-center gap-3">

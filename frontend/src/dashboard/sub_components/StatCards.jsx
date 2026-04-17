@@ -44,7 +44,7 @@ export default function StatCards({ stats = [], isLoading = false }) {
 
         return (
           <div
-            key={i}
+            key={card.title || i}
             className="bg-white rounded-2xl p-5 border border-[#E7E9F0] shadow-sm flex flex-col justify-between hover:shadow-xl hover:shadow-[#94A3B8]/10 hover:-translate-y-1 hover:scale-[1.01] transition-all duration-300 hover:border-[#94A3B8]/50 group"
           >
             <div className="flex justify-between items-start mb-4">

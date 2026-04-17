@@ -1,5 +1,11 @@
-from fastapi import Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+"""
+DEPRECATED
+==========
+This file was an empty stub.  The database dependency has been moved to:
 
-from src.db.session import get_db
+    src/dependencies/db.py
 
+Please update any imports to use:
+
+    from src.dependencies.db import get_db
+"""

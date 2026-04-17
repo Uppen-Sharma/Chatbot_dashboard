@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Resolve .env relative to this file regardless of working directory
+load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
 
 
 def get_env(key: str, default=None, required: bool = False):

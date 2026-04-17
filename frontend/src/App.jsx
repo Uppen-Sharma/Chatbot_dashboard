@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+
 
 const BotDashboardPage = lazy(() => import("./dashboard/Dashboard"));
 const LoginPage = lazy(() => import("./Login"));

@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { BarChart2, FileText, ChevronDown, ChevronUp } from "lucide-react";
 
-export default function PeakUsage({ chartData = [], faqData = [] }) {
+export default function PeakUsage({
+  chartData = [],
+  faqData = [],
+  isLoading = false,
+}) {
   const [openIndex, setOpenIndex] = useState(0);
   const [hoveredData, setHoveredData] = useState(null);
 
@@ -94,69 +98,90 @@ export default function PeakUsage({ chartData = [], faqData = [] }) {
             ))}
           </div>
 
-          {/* Layered Pills */}
+          {/* Layered Pills — show skeleton bars while loading */}
           <div className="relative h-full flex-1 ml-11 flex items-end justify-between px-4 pb-[30px] z-10">
-            {chartData.map((data, index) => {
-              const isPeak =
-                data.val3 === peakPoint.val3 && data.label === peakPoint.label;
-
-              // Layered heights based on cumulative stacking
-              const totalH = Math.min(
-                100,
-                (data.val1 || 0) + (data.val2 || 0) + (data.val3 || 0),
-              );
-              const medH = Math.min(100, (data.val2 || 0) + (data.val3 || 0));
-              const highH = Math.min(100, data.val3 || 0);
-
-              return (
-                <div
-                  key={index}
-                  className="relative h-full flex flex-col items-center justify-end group cursor-pointer"
-                  style={{ width: `${slotPct}%` }}
-                  onMouseEnter={() => setHoveredData(data)}
-                  onMouseLeave={() => setHoveredData(null)}
-                >
-                  {/* The Pill Stack */}
+            {isLoading
+              ? // Skeleton placeholder bars
+                [...Array(7)].map((_, index) => (
                   <div
-                    className="relative flex items-end justify-center transition-transform duration-300 group-hover:-translate-y-1"
-                    style={{ width: barWidth, height: "100%" }}
+                    key={index}
+                    className="relative h-full flex flex-col items-center justify-end"
+                    style={{ width: `${100 / 7}%` }}
                   >
-                    {/* Peak Glow */}
-                    {isPeak && (
-                      <div
-                        className="absolute w-2 h-2 rounded-full bg-[#007BC6] animate-pulse z-20"
-                        style={{ bottom: `${totalH}%`, marginBottom: 8 }}
-                      />
-                    )}
-
-                    {/* Back layer */}
                     <div
-                      className="absolute bottom-0 w-full bg-[#B3D7EE] rounded-t-full transition-all duration-500 ease-out shadow-sm"
-                      style={{ height: `${totalH}%` }}
+                      className="w-8 rounded-t-full bg-gray-100 animate-pulse"
+                      style={{ height: `${40 + index * 8}%` }}
                     />
-                    {/* Middle layer */}
-                    <div
-                      className="absolute bottom-0 w-full bg-[#0B95E9] rounded-t-full transition-all duration-500 ease-out delay-75 shadow-sm"
-                      style={{ height: `${medH}%` }}
-                    />
-                    {/* Front layer */}
-                    <div
-                      className="absolute bottom-0 w-full bg-[#007BC6] rounded-t-full transition-all duration-500 ease-out delay-150 shadow-sm"
-                      style={{ height: `${highH}%` }}
-                    />
+                    <div className="absolute -bottom-7 w-full flex justify-center">
+                      <span className="h-2 w-5 bg-gray-100 rounded-full animate-pulse" />
+                    </div>
                   </div>
+                ))
+              : chartData.map((data, index) => {
+                  const isPeak =
+                    data.val3 === peakPoint.val3 &&
+                    data.label === peakPoint.label;
 
-                  {/* X-Axis Label */}
-                  <div className="absolute -bottom-7 w-full flex justify-center">
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wider transition-colors duration-200 ${isPeak ? "text-[#007BC6]" : "text-gray-400"}`}
+                  // Layered heights based on cumulative stacking
+                  const totalH = Math.min(
+                    100,
+                    (data.val1 || 0) + (data.val2 || 0) + (data.val3 || 0),
+                  );
+                  const medH = Math.min(
+                    100,
+                    (data.val2 || 0) + (data.val3 || 0),
+                  );
+                  const highH = Math.min(100, data.val3 || 0);
+
+                  return (
+                    <div
+                      key={index}
+                      className="relative h-full flex flex-col items-center justify-end group cursor-pointer"
+                      style={{ width: `${slotPct}%` }}
+                      onMouseEnter={() => setHoveredData(data)}
+                      onMouseLeave={() => setHoveredData(null)}
                     >
-                      {data.label}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                      {/* The Pill Stack */}
+                      <div
+                        className="relative flex items-end justify-center transition-transform duration-300 group-hover:-translate-y-1"
+                        style={{ width: barWidth, height: "100%" }}
+                      >
+                        {/* Peak Glow */}
+                        {isPeak && (
+                          <div
+                            className="absolute w-2 h-2 rounded-full bg-[#007BC6] animate-pulse z-20"
+                            style={{ bottom: `${totalH}%`, marginBottom: 8 }}
+                          />
+                        )}
+
+                        {/* Back layer */}
+                        <div
+                          className="absolute bottom-0 w-full bg-[#B3D7EE] rounded-t-full transition-all duration-500 ease-out shadow-sm"
+                          style={{ height: `${totalH}%` }}
+                        />
+                        {/* Middle layer */}
+                        <div
+                          className="absolute bottom-0 w-full bg-[#0B95E9] rounded-t-full transition-all duration-500 ease-out delay-75 shadow-sm"
+                          style={{ height: `${medH}%` }}
+                        />
+                        {/* Front layer */}
+                        <div
+                          className="absolute bottom-0 w-full bg-[#007BC6] rounded-t-full transition-all duration-500 ease-out delay-150 shadow-sm"
+                          style={{ height: `${highH}%` }}
+                        />
+                      </div>
+
+                      {/* X-Axis Label */}
+                      <div className="absolute -bottom-7 w-full flex justify-center">
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wider transition-colors duration-200 ${isPeak ? "text-[#007BC6]" : "text-gray-400"}`}
+                        >
+                          {data.label}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
           </div>
         </div>
       </div>
@@ -172,14 +197,15 @@ export default function PeakUsage({ chartData = [], faqData = [] }) {
           </div>
           <div className="flex-1 overflow-y-auto hide-scrollbar divide-y divide-[#E7E9F0]">
             {faqData && faqData.length > 0 ? (
-              faqData.map(({ title, items }, i) => (
+              // Backend returns flat { question, answer, count } objects
+              faqData.map(({ question, answer, count }, i) => (
                 <div key={i} className="flex flex-col">
                   <button
                     onClick={() => setOpenIndex(openIndex === i ? -1 : i)}
                     className="w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
                   >
                     <h4 className="font-semibold text-black text-sm pr-4">
-                      {title}
+                      {question}
                     </h4>
                     {openIndex === i ? (
                       <ChevronUp size={18} className="text-gray-500 shrink-0" />
@@ -193,14 +219,16 @@ export default function PeakUsage({ chartData = [], faqData = [] }) {
                   <div
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === i ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
                   >
-                    <ul className="px-6 pb-5 space-y-3 text-xs text-gray-600 font-normal">
-                      {items?.map((item, j) => (
-                        <li key={j} className="flex items-start gap-3">
-                          <span className="w-1 h-1 bg-gray-500 rounded-full mt-1.5 shrink-0" />
-                          <span className="leading-relaxed">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="px-6 pb-5 space-y-2">
+                      <p className="text-xs text-gray-600 font-normal leading-relaxed">
+                        {answer}
+                      </p>
+                      {count != null && (
+                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                          {count} queries
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))

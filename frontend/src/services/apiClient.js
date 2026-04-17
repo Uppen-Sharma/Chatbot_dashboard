@@ -1,7 +1,7 @@
 // Read base URL from environment variable so it works in staging/prod.
 const BASE_URL = import.meta.env?.VITE_API_URL ?? "http://localhost:5000/api";
 
-// All functions now return parsed JSON directly so callers don't need to call .json() themselves — reduces boilerplate and prevents double-await bugs.
+
 const apiFetch = async (url, options = {}) => {
   const res = await fetch(url, options);
   if (!res.ok) {

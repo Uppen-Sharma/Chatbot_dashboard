@@ -8,8 +8,9 @@ import {
 } from "../../services/apiClient";
 
 // Constants defined outside the hook so they're not recreated on every render
-export const DEFAULT_START = "2026-01-01";
-export const DEFAULT_END = "2026-03-01";
+// Dynamic defaults: Jan 1 of this year → today (YTD range)
+export const DEFAULT_START = `${new Date().getFullYear()}-01-01`;
+export const DEFAULT_END = new Date().toISOString().split("T")[0];
 
 function parseDuration(str = "") {
   const minSec = str?.match(/(\d+)m\s*(\d+)s/);
@@ -27,9 +28,9 @@ export function useDashboard() {
   const [chartData, setChartData] = useState([]);
   const [faqData, setFaqData] = useState([]);
 
-  // Added isError state (was destructured in Dashboard.jsx but never returned)
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isUsersLoading, setIsUsersLoading] = useState(true);
 
   // Date Range States
   const [startDate, setStartDate] = useState(DEFAULT_START);
@@ -47,18 +48,19 @@ export function useDashboard() {
 
   // Fetch users once on mount, independent of date range
   useEffect(() => {
+    setIsUsersLoading(true);
     getUsers()
       .then((data) => setUserData(data))
-      .catch((err) => console.error("Failed to fetch users:", err));
+      .catch((err) => console.error("Failed to fetch users:", err))
+      .finally(() => setIsUsersLoading(false));
   }, []);
 
-  // Debounce date changes so rapid input doesn't fire multiple requests
   const debounceRef = useRef(null);
 
   useEffect(() => {
     if (!startDate || !endDate) return;
 
-    // Clear any pending fetch before scheduling a new one
+    let isCancelled = false;
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(async () => {
@@ -66,25 +68,29 @@ export function useDashboard() {
         setIsLoading(true);
         setIsError(false);
 
-        // apiClient now returns parsed JSON directly — no .json() needed
         const [statsData, chartRes, faqRes] = await Promise.all([
           getStats(startDate, endDate),
           getPeakUsage(startDate, endDate),
           getFaqs(startDate, endDate),
         ]);
 
-        setDashboardStats(statsData);
-        setChartData(chartRes);
-        setFaqData(faqRes);
+        if (!isCancelled) {
+          setDashboardStats(statsData);
+          setChartData(chartRes);
+          setFaqData(faqRes);
+        }
       } catch (error) {
-        console.error("Trouble fetching dashboard data:", error);
-        setIsError(true); // actually set error state
+        if (!isCancelled) {
+          console.error("Trouble fetching dashboard data:", error);
+          setIsError(true);
+        }
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) setIsLoading(false);
       }
-    }, 350); // 350ms debounce
+    }, 350); 
 
     return () => {
+      isCancelled = true;
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [startDate, endDate]);
@@ -222,7 +228,8 @@ export function useDashboard() {
     chartData,
     faqData,
     isLoading,
-    isError, // now actually returned
+    isUsersLoading,
+    isError,
     startDate,
     setStartDate,
     endDate,

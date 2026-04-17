@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, ChevronRight } from "lucide-react";
-// Use the shared apiClient instead of raw fetch with a hardcoded URL
+
 import { getUserChats } from "../../services/apiClient";
 
 export default function ChatListPanel({
@@ -89,7 +89,15 @@ export default function ChatListPanel({
                 <p className="text-sm font-normal text-black mb-1 truncate">
                   {chat.title}
                 </p>
-                <p className="text-xs text-gray-500">{chat.date}</p>
+                <p className="text-xs text-gray-500">
+                  {chat.lastMessageAt
+                    ? new Date(chat.lastMessageAt).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "No messages yet"}
+                </p>
               </div>
               <div
                 className={`p-1.5 rounded-full transition-opacity ${
