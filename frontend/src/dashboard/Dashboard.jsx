@@ -53,46 +53,13 @@ export default function Dashboard() {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
         if (isPickerOpen) {
-          let hasFallback = false;
-          let finalStart = tempStart;
-          let finalEnd = tempEnd;
-
-          if (!finalStart) {
-            finalStart = DEFAULT_START;
-            hasFallback = true;
-          }
-          if (!finalEnd) {
-            finalEnd = DEFAULT_END;
-            hasFallback = true;
-          }
-
-          if (hasFallback) {
-            toast.error(
-              "Invalid or missing date entered! Reverting to default date range.",
-            );
-          }
-
-          if (finalStart !== startDate || finalEnd !== endDate) {
-            setStartDate(finalStart);
-            setEndDate(finalEnd);
-          }
           setIsPickerOpen(false);
         }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [
-    isPickerOpen,
-    tempStart,
-    tempEnd,
-    setStartDate,
-    setEndDate,
-    DEFAULT_START,
-    DEFAULT_END,
-    startDate,
-    endDate,
-  ]);
+  }, [isPickerOpen]);
 
   const handleOpenPicker = () => {
     setTempStart(startDate);
@@ -100,33 +67,31 @@ export default function Dashboard() {
     setIsPickerOpen(true);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      let hasFallback = false;
-      let finalStart = tempStart;
-      let finalEnd = tempEnd;
+  const handleApply = () => {
+    let hasFallback = false;
+    let finalStart = tempStart;
+    let finalEnd = tempEnd;
 
-      if (!finalStart) {
-        finalStart = DEFAULT_START;
-        hasFallback = true;
-      }
-      if (!finalEnd) {
-        finalEnd = DEFAULT_END;
-        hasFallback = true;
-      }
-
-      if (hasFallback) {
-        toast.error(
-          "Invalid or missing date entered! Reverting to default date range.",
-        );
-      }
-
-      if (finalStart !== startDate || finalEnd !== endDate) {
-        setStartDate(finalStart);
-        setEndDate(finalEnd);
-      }
-      setIsPickerOpen(false);
+    if (!finalStart) {
+      finalStart = DEFAULT_START;
+      hasFallback = true;
     }
+    if (!finalEnd) {
+      finalEnd = DEFAULT_END;
+      hasFallback = true;
+    }
+
+    if (hasFallback) {
+      toast.error(
+        "Invalid or missing date entered! Reverting to default date range.",
+      );
+    }
+
+    if (finalStart !== startDate || finalEnd !== endDate) {
+      setStartDate(finalStart);
+      setEndDate(finalEnd);
+    }
+    setIsPickerOpen(false);
   };
 
   //this auth uses localStorage which can be spoofed in devtools.
@@ -173,7 +138,7 @@ export default function Dashboard() {
     <div className="relative min-h-screen bg-gray-50 text-gray-900 font-sans overflow-x-hidden">
       {/* Header */}
       <header className="bg-white border-b border-[#E7E9F0] fixed top-0 left-0 w-full h-20 z-40">
-        <div className="w-full h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+        <div className="w-full h-full px-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-12 h-12 flex-shrink-0">
               <img
@@ -187,7 +152,14 @@ export default function Dashboard() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div 
+            className="flex items-center gap-2 sm:gap-4 transition-transform duration-600 ease-out z-50"
+            style={{
+              transform: isChatOpen
+                ? `translateX(-${showConversation ? panelWidth * 2 : panelWidth}px)`
+                : "translateX(0px)",
+            }}
+          >
             <button className="hidden sm:flex items-center justify-center gap-2 bg-white px-5 py-2.5 border border-[#E7E9F0] rounded-full shadow-sm text-sm font-semibold text-black hover:shadow-xl hover:shadow-[#94A3B8]/10 hover:-translate-y-1 transition-all duration-300 hover:border-[#94A3B8]/50 cursor-pointer">
               <Globe size={16} className="text-gray-500" />
               <span className="tracking-wide">English</span>
@@ -211,7 +183,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main content */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-10 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
+      <main className="w-full px-6 pt-24 pb-10 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-xl font-semibold text-black tracking-tight">
             Performance Dashboard
@@ -262,7 +234,6 @@ export default function Dashboard() {
                       max={new Date().toISOString().split("T")[0]}
                       value={tempStart}
                       onChange={(e) => setTempStart(e.target.value)}
-                      onKeyDown={handleKeyDown}
                       className="text-sm font-semibold text-gray-700 bg-gray-50/50 hover:bg-gray-50 border border-[#E7E9F0] rounded-xl px-3 py-2 outline-none focus:border-[#007BC6] focus:ring-2 focus:ring-[#007BC6]/10 transition-all cursor-pointer w-full box-border"
                     />
                   </div>
@@ -275,11 +246,16 @@ export default function Dashboard() {
                       max={new Date().toISOString().split("T")[0]}
                       value={tempEnd}
                       onChange={(e) => setTempEnd(e.target.value)}
-                      onKeyDown={handleKeyDown}
                       className="text-sm font-semibold text-gray-700 bg-gray-50/50 hover:bg-gray-50 border border-[#E7E9F0] rounded-xl px-3 py-2 outline-none focus:border-[#007BC6] focus:ring-2 focus:ring-[#007BC6]/10 transition-all cursor-pointer w-full box-border"
                     />
                   </div>
                 </div>
+                <button
+                  onClick={handleApply}
+                  className="mt-4 w-full bg-[#007BC6] text-white py-2 rounded-xl text-sm font-semibold hover:bg-[#006ba8] transition-colors"
+                >
+                  Apply
+                </button>
               </div>
             )}
           </div>

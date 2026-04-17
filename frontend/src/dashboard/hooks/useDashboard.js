@@ -42,9 +42,10 @@ export function useDashboard() {
   const [activeChatId, setActiveChatId] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [sortConfig, setSortConfig] = useState([]);
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1024,
-  );
+  const [windowDimensions, setWindowDimensions] = useState({
+    width: typeof window !== "undefined" ? window.innerWidth : 1024,
+    height: typeof window !== "undefined" ? window.innerHeight : 768,
+  });
 
   // Fetch users once on mount, independent of date range
   useEffect(() => {
@@ -87,7 +88,7 @@ export function useDashboard() {
       } finally {
         if (!isCancelled) setIsLoading(false);
       }
-    }, 350); 
+    }, 350);
 
     return () => {
       isCancelled = true;
@@ -99,7 +100,12 @@ export function useDashboard() {
     let timer;
     const onResize = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => setWindowWidth(window.innerWidth), 150);
+      timer = setTimeout(() => {
+        setWindowDimensions({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      }, 150);
     };
     window.addEventListener("resize", onResize);
     return () => {
@@ -133,15 +139,17 @@ export function useDashboard() {
 
   const showConversation = activeChatId !== null;
   const panelWidth =
-    windowWidth < 768 ? windowWidth : Math.min(450, windowWidth * 0.45);
-  const usersPerPage =
-    windowWidth < 640
-      ? 5
-      : windowWidth < 1024
-        ? 8
-        : windowWidth < 1440
-          ? 10
-          : 15;
+    windowDimensions.width < 768
+      ? windowDimensions.width
+      : Math.min(450, windowDimensions.width * 0.45);
+
+  // Dynamically calculate table rows based on available vertical screen real estate.
+  // The dashboard top elements (header, date picker, charts) consume roughly ~550px.
+  // Each table row takes ~60px. We enforce a minimum of 5 rows for mobile/tablets.
+  const usersPerPage = Math.max(
+    5,
+    Math.floor((windowDimensions.height - 550) / 60)
+  );
 
   const sortedData = useMemo(() => {
     if (sortConfig.length === 0) return userData;
@@ -221,7 +229,7 @@ export function useDashboard() {
     totalUsers,
     totalPages,
     displayedUsers,
-    windowWidth,
+    windowDimensions,
     sortConfig,
     handleSort,
     dashboardStats,

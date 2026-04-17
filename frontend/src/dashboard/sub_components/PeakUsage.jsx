@@ -196,39 +196,13 @@ export default function PeakUsage({
             </div>
           </div>
           <div className="flex-1 overflow-y-auto hide-scrollbar divide-y divide-[#E7E9F0]">
-            {faqData && faqData.length > 0 ? (
-              // Backend returns flat { question, answer, count } objects
-              faqData.map(({ question, answer, count }, i) => (
+         {faqData && faqData.length > 0 ? (
+              faqData.map(({ question }, i) => (
                 <div key={i} className="flex flex-col">
-                  <button
-                    onClick={() => setOpenIndex(openIndex === i ? -1 : i)}
-                    className="w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
-                  >
-                    <h4 className="font-semibold text-black text-sm pr-4">
+                  <div className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-left">
+                    <h4 className="font-semibold text-gray-700 text-sm pr-4 leading-relaxed">
                       {question}
                     </h4>
-                    {openIndex === i ? (
-                      <ChevronUp size={18} className="text-gray-500 shrink-0" />
-                    ) : (
-                      <ChevronDown
-                        size={18}
-                        className="text-gray-500 shrink-0"
-                      />
-                    )}
-                  </button>
-                  <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === i ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
-                  >
-                    <div className="px-6 pb-5 space-y-2">
-                      <p className="text-xs text-gray-600 font-normal leading-relaxed">
-                        {answer}
-                      </p>
-                      {count != null && (
-                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
-                          {count} queries
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
               ))
