@@ -2,13 +2,20 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
-
 const BotDashboardPage = lazy(() => import("./dashboard/Dashboard"));
 const LoginPage = lazy(() => import("./Login"));
 
-// Auth guard - checks localStorage for login flag.
-// Unauthenticated users are redirected to /login.
+// Auth guard:
+// - In 'prod' mode: NGINX + oauth2-proxy protects all routes BEFORE React loads.
+//   If the user reaches here, they are already authenticated. Trust the proxy.
+// - In 'dev' mode: fall back to the localStorage flag set on mock-login.
 function ProtectedRoute({ children }) {
+  const authMode = import.meta.env.VITE_AUTH_MODE || "dev";
+  if (authMode === "prod") {
+    // Session is managed by oauth2-proxy at the proxy layer.
+    // React should not second-guess it — just render the app.
+    return children;
+  }
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   return isLoggedIn ? children : <Navigate to="/login" replace />;
 }

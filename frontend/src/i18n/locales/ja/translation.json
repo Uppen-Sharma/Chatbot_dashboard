@@ -1,0 +1,108 @@
+{
+  "header": {
+    "title": "接続管理ダッシュボード",
+    "admin": "管理者",
+    "manageAccount": "アカウントを管理する",
+    "uploadFile": "ファイルをアップロード",
+    "logout": "ログアウト"
+  },
+  "language": {
+    "en": "English",
+    "ja": "日本語",
+    "cn": "繁體中文"
+  },
+  "loading": {
+    "dashboard": "ダッシュボードを読み込み中...",
+    "refreshing": "データを更新中...",
+    "users": "ユーザーを読み込み中...",
+    "chats": "チャットを読み込み中..."
+  },
+  "error": {
+    "failedToLoad": "ダッシュボードの読み込みに失敗しました",
+    "serverUnreachable": "サーバーに接続できません。接続を確認して再試行してください。",
+    "retry": "再試行",
+    "couldNotLoadChats": "チャットを読み込めませんでした。再試行してください。"
+  },
+  "dashboard": {
+    "performanceOverview": "パフォーマンス概要"
+  },
+  "dateFilter": {
+    "thisWeek": "今週",
+    "thisMonth": "今月",
+    "quarterly": "四半期",
+    "yearly": "年間",
+    "selectYear": "年を選択",
+    "apply": "適用",
+    "from": "開始日",
+    "to": "終了日",
+    "thisWeekLabel": "今週",
+    "thisMonthLabel": "今月",
+    "lastThreeMonths": "過去3ヶ月",
+    "selectedRange": "選択された期間"
+  },
+  "usersTable": {
+    "title": "ユーザー一覧",
+    "fullName": "氏名",
+    "rating": "評価",
+    "conversations": "会話数",
+    "avgDuration": "平均時間",
+    "noUsers": "条件に一致するユーザーが見つかりません。",
+    "prev": "前へ",
+    "next": "次へ",
+    "lastActive": "最終アクティブ {{lastActive}}",
+    "showing": "全 {{total}} 件中 {{start}} 件を表示"
+  },
+  "chat": {
+    "header": "チャット",
+    "noChats": "最近のチャットはありません。",
+    "noMessages": "メッセージはまだありません",
+    "deletePrompt": "このチャットを削除しますか？この操作は元に戻せません。",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "selectChat": "リストから会話を選択してください",
+    "loadError": "会話を読み込めませんでした。"
+  },
+  "peakUsage": {
+    "title": "ピーク使用時間",
+    "subtitle": "{{time}} がピーク使用時間です - サポートのスケールアップを検討してください",
+    "legendUsage": "使用率",
+    "legendPeak": "ピーク:",
+    "faqTitle":"よくある質問",
+    "noFaq": "FAQ データがありません。",
+    "peakUsageAt": "ピーク使用時間:",
+    "considerScaling": "サポートのスケールアップを検討してください"
+  },
+  "upload": {
+    "title": "ファイルをアップロード",
+    "subtitle": "Word、Excel、PowerPoint、PDF のみ",
+    "preLogin": "ログイン前",
+    "postLogin": "ログイン後",
+    "dragDrop": "ここにファイルをドラッグ＆ドロップ",
+    "dropHere": "ここにドロップ",
+    "browse": "ファイルを選択する",
+    "browseOr": "または",
+    "overwriteTitle": "ファイルが既に存在します",
+    "overwriteBody": "同名のファイルがサーバーに既に存在します。上書きしますか？",
+    "overwriteConfirm": "はい、上書きする",
+    "invalidType": "非対応のファイル形式",
+    "uploadedSuccess": "ファイルが正常にアップロードされました！",
+    "fileSelected": "1 ファイル選択済み",
+    "noFileSelected": "ファイルが選択されていません",
+    "cancel": "キャンセル",
+    "upload": "アップロード",
+    "uploading": "アップロード中…"
+  },
+  "login": {
+    "title": "ダッシュボード",
+    "heading": "SSO でログイン",
+    "emailLabel": "メールアドレス",
+    "emailPlaceholder": "メールアドレスを入力してください",
+    "loginButton": "ログイン",
+    "notUsingSso": "SSO を使用していませんか？",
+    "loginWithPassword": "パスワードでログイン",
+    "errorEmpty": "メールアドレスを入力してください。",
+    "errorInvalid": "有効なメールアドレスを入力してください。",
+    "terms": "利用規約",
+    "privacy": "プライバシーポリシー"
+  }
+}

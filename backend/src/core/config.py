@@ -21,3 +21,10 @@ DB_URL = get_env("DB_URL", "")
 DB_POOL_SIZE = int(get_env("DB_POOL_SIZE", 10))
 DB_MAX_OVERFLOW = int(get_env("DB_MAX_OVERFLOW", 20))
 DB_POOL_TIMEOUT = int(get_env("DB_POOL_TIMEOUT", 30))
+
+# Authentication / Authorization Config
+AUTH_MODE = get_env("AUTH_MODE", "dev")
+# Comma-separated list of admin emails
+ADMIN_EMAILS = get_env("ADMIN_EMAILS", "admin@test.com").split(",")
+# Comma-separated list of allowed domains
+ALLOWED_DOMAINS = get_env("ALLOWED_DOMAINS", "@srmtech.com").split(",")

@@ -572,13 +572,13 @@ async def fetch_chat_messages(chat_id: str, db: AsyncSession) -> List[dict]:
     return formatted
 
 
-async def remove_user_data(user_id: str, db: AsyncSession) -> dict:
+async def remove_conversation_data(chat_id: str, db: AsyncSession) -> dict:
     """
-    Hard-delete all data belonging to a user:
-      1. Feedback rows  (no FK cascade — must be removed explicitly)
-      2. Conversations  (DB FK CASCADE removes child messages automatically)
+    Hard-delete all data belonging to a conversation:
+      1. Feedback rows
+      2. Conversation (CASCADE removes child messages automatically)
     """
-    await db.execute(delete(Feedback).where(Feedback.user_email == user_id))
-    await db.execute(delete(Conversation).where(Conversation.user_email == user_id))
+    await db.execute(delete(Feedback).where(Feedback.conversation_id == chat_id))
+    await db.execute(delete(Conversation).where(Conversation.id == chat_id))
     await db.commit()
-    return {"success": True, "message": f"User {user_id} and all related data deleted."}
+    return {"success": True, "message": f"Conversation {chat_id} and all related data deleted."}

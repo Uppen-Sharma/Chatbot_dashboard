@@ -4,13 +4,22 @@ import {
   getPeakUsage,
   getFaqs,
   getUsers,
-  deleteUser as apiDeleteUser,
 } from "../../services/apiClient";
 
-// Constants defined outside the hook so they're not recreated on every render
-// Dynamic defaults: Jan 1 of this year → today (YTD range)
-export const DEFAULT_START = `${new Date().getFullYear()}-01-01`;
-export const DEFAULT_END = new Date().toISOString().split("T")[0];
+const formatIsoLocalDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const today = new Date();
+const startOfCurrentWeek = new Date(today);
+const dayOfWeek = (today.getDay() + 6) % 7;
+startOfCurrentWeek.setDate(today.getDate() - dayOfWeek);
+
+export const DEFAULT_START = formatIsoLocalDate(startOfCurrentWeek);
+export const DEFAULT_END = formatIsoLocalDate(today);
 
 function parseDuration(str = "") {
   const minSec = str?.match(/(\d+)m\s*(\d+)s/);
@@ -35,6 +44,7 @@ export function useDashboard() {
   // Date Range States
   const [startDate, setStartDate] = useState(DEFAULT_START);
   const [endDate, setEndDate] = useState(DEFAULT_END);
+  const [peakUsageBucket, setPeakUsageBucket] = useState("day");
 
   // UI States
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,14 +74,16 @@ export function useDashboard() {
     let isCancelled = false;
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
+    setIsLoading(true);
+    setChartData([]);
+
     debounceRef.current = setTimeout(async () => {
       try {
-        setIsLoading(true);
         setIsError(false);
 
         const [statsData, chartRes, faqRes] = await Promise.all([
           getStats(startDate, endDate),
-          getPeakUsage(startDate, endDate),
+          getPeakUsage(startDate, endDate, peakUsageBucket),
           getFaqs(startDate, endDate),
         ]);
 
@@ -94,7 +106,7 @@ export function useDashboard() {
       isCancelled = true;
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [startDate, endDate]);
+  }, [startDate, endDate, peakUsageBucket]);
 
   useEffect(() => {
     let timer;
@@ -134,7 +146,6 @@ export function useDashboard() {
       if (active) return [{ key, dir: active.dir === "high" ? "low" : "high" }];
       return [{ key, dir: "high" }];
     });
-    setCurrentPage(1);
   }, []);
 
   const showConversation = activeChatId !== null;
@@ -143,17 +154,19 @@ export function useDashboard() {
       ? windowDimensions.width
       : Math.min(450, windowDimensions.width * 0.45);
 
-  // Dynamically calculate table rows based on available vertical screen real estate.
-  // The dashboard top elements (header, date picker, charts) consume roughly ~550px.
-  // Each table row takes ~60px. We enforce a minimum of 5 rows for mobile/tablets.
-  const usersPerPage = Math.max(
-    5,
-    Math.floor((windowDimensions.height - 550) / 60)
-  );
+  // Keep pagination predictable: always show 10 users per page.
+  const usersPerPage = 10;
 
-  const sortedData = useMemo(() => {
-    if (sortConfig.length === 0) return userData;
-    return [...userData].sort((a, b) => {
+  const totalUsers = userData.length;
+  const totalPages = Math.max(1, Math.ceil(totalUsers / usersPerPage));
+
+  const displayedUsers = useMemo(() => {
+    const pageSlice = userData.slice(
+      (currentPage - 1) * usersPerPage,
+      currentPage * usersPerPage,
+    );
+    if (sortConfig.length === 0) return pageSlice;
+    return [...pageSlice].sort((a, b) => {
       for (let rule of sortConfig) {
         let aVal = 0,
           bVal = 0;
@@ -172,14 +185,7 @@ export function useDashboard() {
       }
       return 0;
     });
-  }, [sortConfig, userData]);
-
-  const totalUsers = sortedData.length;
-  const totalPages = Math.max(1, Math.ceil(totalUsers / usersPerPage));
-  const displayedUsers = sortedData.slice(
-    (currentPage - 1) * usersPerPage,
-    currentPage * usersPerPage,
-  );
+  }, [sortConfig, userData, currentPage, usersPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -196,21 +202,6 @@ export function useDashboard() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isChatOpen, closeChat]);
-
-  const deleteUser = async (userId) => {
-    if (
-      !window.confirm("Are you sure you want to permanently delete this user?")
-    )
-      return;
-    try {
-      await apiDeleteUser(userId);
-      setUserData((prev) => prev.filter((u) => u.id !== userId));
-      if (selectedUser?.id === userId) closeChat();
-    } catch (e) {
-      console.error("Delete failed:", e);
-      alert("Failed to delete user. Please try again.");
-    }
-  };
 
   return {
     currentPage,
@@ -242,7 +233,8 @@ export function useDashboard() {
     setStartDate,
     endDate,
     setEndDate,
-    deleteUser,
+    peakUsageBucket,
+    setPeakUsageBucket,
     DEFAULT_START,
     DEFAULT_END,
   };

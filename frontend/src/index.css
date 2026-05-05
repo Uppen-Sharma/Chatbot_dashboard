@@ -8,11 +8,6 @@
   text-rendering: optimizeLegibility;
 }
 
-@layer base {
-  body {
-    @apply antialiased;
-  }
-}
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
@@ -29,9 +24,6 @@
   border: none;
   box-shadow: none;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
-}
 
 /* Firefox support - minimalist track */
 * {
@@ -39,70 +31,125 @@
   scrollbar-color: #e2e8f0 transparent;
 }
 
-/* Custom Animation Utilities */
-@layer utilities {
-  .animate-in {
-    animation-duration: 700ms;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    animation-fill-mode: both;
-    backface-visibility: hidden;
-  }
+@import "./animations.css";
 
-  .fade-in {
-    animation-name: fadeIn;
-  }
-
-  .slide-in-from-bottom-2 {
-    animation-name: slideInBottom2;
-  }
-
-  .slide-in-from-bottom-4 {
-    animation-name: slideInBottom4;
-  }
-
-  .fill-mode-both {
-    animation-fill-mode: both !important;
-    backface-visibility: hidden;
-  }
-
-  .delay-100 {
-    animation-delay: 100ms;
-  }
-  .delay-200 {
-    animation-delay: 200ms;
-  }
-  .delay-300 {
-    animation-delay: 300ms;
-  }
+/* Date Picker Theme Customization */
+.__datepicker.__datepicker-theme-blue,
+.__datepicker.__datepicker-theme-blue * {
+  --primary: rgb(11, 149, 233) !important;
+  --secondary: rgb(55, 135, 255);
+  --background: #ffffff;
+  --color: #44536a;
+  --border: #d7e4f1;
+  --light-border: #e7e9f0;
+  --corner: 8px;
+  --width: 320px;
+  --holiday: #ff5733;
+  --disable-day-color: #cbd5e1;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* Datepicker base */
+.__datepicker {
+  font-family: "Plus Jakarta Sans", sans-serif;
 }
 
-@keyframes slideInBottom2 {
-  from {
-    transform: translateY(0.5rem);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+/* Popup shell */
+.__datepicker-dropdown {
+  border: 1px solid #d7e4f1;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
 }
 
-@keyframes slideInBottom4 {
-  from {
-    transform: translateY(1rem);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+/* Header row with arrows + month/year label */
+.__datepicker-dropdown-body-header {
+  background-color: #fff;
+  color: #ffffff;
+  padding: 10px 8px;
+}
+
+.__datepicker-dropdown-header-text {
+  color: #ffffff;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-weight: 600;
+}
+
+/* Arrow buttons */
+.__datepicker-dropdown-body-header .__datepicker-icon {
+  color: #ffffff;
+  border-radius: 8px;
+}
+
+.__datepicker-dropdown-body-header .__datepicker-icon:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Hide only year jump buttons: << and >> */
+.__datepicker-dropdown-body-header .__datepicker-dropdown-body-controller .__datepicker-icon:first-child {
+  display: none !important;
+}
+
+/* Weekday row */
+.__datepicker-dropdown-body-weekdays,
+.__datepicker-dropdown-body-week,
+.__datepicker-dropdown-body-day-name {
+  color: #64748b;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-weight: 600;
+}
+
+/* Day cells */
+.__datepicker-dropdown-body-day {
+  color: #44536a;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-weight: 500;
+}
+
+.__datepicker-dropdown-body-day:hover {
+  background-color: #e7f4ff;
+  color: #007bc6;
+}
+
+/* Selected day */
+.__datepicker-dropdown-body-day-active,
+.__datepicker-dropdown-body-day-selected {
+  background-color: #007bc6 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* Disabled day */
+.__datepicker-dropdown-body-day-disabled {
+  color: #cbd5e1 !important;
+  cursor: not-allowed;
+}
+
+/* Weekday strip (moved control to app CSS) */
+.__datepicker-pick-day-container .__datepicker-weak {
+  display: grid;
+  grid-template-columns: repeat(7, 14%);
+  grid-auto-flow: dense;
+  margin: 0 10px;
+  align-items: center;
+  background-color: #0b95e9;
+  border-radius: 8px;
+  user-select: none;
+  direction: ltr;
+}
+
+.__datepicker-pick-day-container .__datepicker-weak .__datepicker-weak-item {
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 5px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.__datepicker-pick-day-container .__datepicker-weak .__datepicker-weak-item.__datepicker-holiday {
+  color: #ff5733;
 }

@@ -1,0 +1,387 @@
+/* ============================================================
+   animations.css — Central animation & transition definitions
+   ============================================================ */
+
+/* ── Utility classes ── */
+@layer utilities {
+  .brand-gradient-border-hover {
+    border: 1px solid #e7e9f0;
+    background:
+      linear-gradient(#ffffff, #ffffff) padding-box,
+      linear-gradient(120deg, #007bc6 0%, #0b95e9 55%, #66cffd 100%)
+        border-box;
+    transition: border-color 220ms ease, box-shadow 220ms ease,
+      transform 220ms ease;
+  }
+
+  .brand-gradient-border-hover:hover {
+    border-color: transparent;
+    /* box-shadow: 0 12px 24px rgba(11, 149, 233, 0.12); */
+    /* box-shadow: 0 0 20px rgba(11, 149, 233, 0.15); */
+    box-shadow: 0 0 12px rgba(11, 149, 233, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .hover-soft {
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+
+  .hover-soft:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+  }
+
+  .panel-onload {
+    animation-name: panelIn;
+    animation-duration: 320ms;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation-fill-mode: both;
+  }
+
+  .message-onload {
+    animation-name: messageIn;
+    animation-duration: 280ms;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation-fill-mode: both;
+  }
+
+  .animate-in {
+    animation-duration: 700ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-fill-mode: both;
+    backface-visibility: hidden;
+  }
+
+  .fade-in {
+    animation-name: fadeIn;
+  }
+
+  .slide-in-from-bottom-2 {
+    animation-name: slideInBottom2;
+  }
+
+  .slide-in-from-bottom-4 {
+    animation-name: slideInBottom4;
+  }
+
+  .slide-in-from-top-2 {
+    animation-name: slideInTop2;
+  }
+
+  .fill-mode-both {
+    animation-fill-mode: both !important;
+    backface-visibility: hidden;
+  }
+
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .delay-50 {
+    animation-delay: 50ms;
+  }
+  .delay-150 {
+    animation-delay: 150ms;
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInBottom2 {
+  from {
+    transform: translateY(0.5rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInBottom4 {
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInTop2 {
+  from {
+    transform: translateY(-0.5rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ── Icon micro-animations ─────────────────────────────────── */
+
+/* Spin — Globe: 720° momentum spin */
+.icon-spin:hover,
+button:hover .icon-spin { animation: icon-spin-once 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Orbit — Header Globe: smooth rotational orbit */
+.icon-orbit:hover,
+button:hover .icon-orbit { animation: icon-orbit-anim 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); }
+
+/* Wiggle — X close, Trash2, LogOut: snap-back flick */
+.icon-wiggle:hover,
+button:hover .icon-wiggle,
+div:hover > .icon-wiggle { animation: icon-wiggle-anim 0.38s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+
+/* Logout — Header LogOut: quick exit swoosh */
+.icon-logout:hover,
+button:hover .icon-logout,
+div:hover > .icon-logout { animation: icon-logout-anim 0.45s cubic-bezier(0.2, 0.9, 0.2, 1); }
+
+/* Bounce — stat card icons, chart/faq header icons: heartbeat double-beat */
+.icon-bounce:hover,
+button:hover .icon-bounce,
+.brand-gradient-border-hover:hover .icon-bounce { animation: icon-bounce-anim 0.5s ease-in-out; }
+
+/* Pop — Star ratings */
+.icon-pop:hover,
+button:hover .icon-pop { animation: icon-pop-anim 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Nudge Right — ChevronRight: magnetic pull */
+.icon-nudge-r:hover,
+button:hover .icon-nudge-r { animation: icon-nudge-right-anim 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Nudge Left — ChevronLeft: magnetic pull */
+.icon-nudge-l:hover,
+button:hover .icon-nudge-l { animation: icon-nudge-left-anim 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Nudge Down — ChevronDown: gravity tap */
+.icon-nudge-d:hover,
+button:hover .icon-nudge-d { animation: icon-nudge-down-anim 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Nudge Up — ChevronUp */
+.icon-nudge-u:hover,
+button:hover .icon-nudge-u { animation: icon-nudge-up-anim 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Float (continuous) — empty state icons: breathing drift */
+.icon-float { animation: icon-float-anim 3.5s ease-in-out infinite; }
+
+/* Pulse soft (continuous) — error state icons */
+.icon-pulse-soft { animation: icon-pulse-soft-anim 2s ease-in-out infinite; }
+
+@keyframes icon-spin-once {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(720deg); }
+}
+
+@keyframes icon-orbit-anim {
+  0%   { transform: rotate(0deg) scale(1); }
+  40%  { transform: rotate(24deg) scale(1.07); }
+  75%  { transform: rotate(-8deg) scale(1.03); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes icon-wiggle-anim {
+  0%   { transform: rotate(0deg); }
+  15%  { transform: rotate(-22deg); }
+  30%  { transform: rotate(18deg); }
+  50%  { transform: rotate(-12deg); }
+  70%  { transform: rotate(8deg); }
+  85%  { transform: rotate(-4deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes icon-logout-anim {
+  0%   { transform: translateX(0) rotate(0deg); }
+  35%  { transform: translateX(5px) rotate(8deg); }
+  65%  { transform: translateX(-2px) rotate(-4deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+@keyframes icon-bounce-anim {
+  0%   { transform: scale(1); }
+  20%  { transform: scale(1.3); }
+  40%  { transform: scale(1); }
+  60%  { transform: scale(1.18); }
+  80%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes icon-pop-anim {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.4); }
+}
+
+@keyframes icon-nudge-right-anim {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(8px); }
+  65%  { transform: translateX(8px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes icon-nudge-left-anim {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(-8px); }
+  65%  { transform: translateX(-8px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes icon-nudge-down-anim {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(5px); }
+  70%  { transform: translateY(-1px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes icon-nudge-up-anim {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(-5px); }
+  70%  { transform: translateY(1px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes icon-float-anim {
+  0%, 100% { transform: translateY(0)    scale(1); }
+  50%       { transform: translateY(-5px) scale(1.06); }
+}
+
+@keyframes icon-pulse-soft-anim {
+  0%, 100% { opacity: 1;    transform: scale(1);    }
+  50%       { opacity: 0.65; transform: scale(0.88); }
+}
+
+/* Dashboard mini calendar theming */
+.dashboard-mini-calendar .rdrCalendarWrapper {
+  width: 100%;
+  min-width: 0;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 11px;
+}
+
+.dashboard-mini-calendar .rdrMonth {
+  width: 100% !important;
+  min-width: 0;
+  padding: 0;
+}
+
+.dashboard-mini-calendar .rdrMonths,
+.dashboard-mini-calendar .rdrMonthAndYearWrapper,
+.dashboard-mini-calendar .rdrWeekDays,
+.dashboard-mini-calendar .rdrDays {
+  width: 100% !important;
+}
+
+.dashboard-mini-calendar .rdrMonthPicker,
+.dashboard-mini-calendar .rdrYearPicker,
+.dashboard-mini-calendar .rdrMonthAndYearPickers {
+  min-width: 0;
+}
+
+.dashboard-mini-calendar .rdrMonthAndYearWrapper {
+  padding: 0 0 4px;
+  height: 32px;
+}
+
+.dashboard-mini-calendar .rdrMonthName {
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.dashboard-mini-calendar .rdrWeekDay {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 10px;
+  height: 22px;
+  line-height: 22px;
+}
+
+.dashboard-mini-calendar .rdrDays {
+  row-gap: 1px;
+}
+
+.dashboard-mini-calendar .rdrDay {
+  height: 30px;
+}
+
+.dashboard-mini-calendar .rdrDayNumber {
+  top: 0;
+  bottom: 0;
+}
+
+.dashboard-mini-calendar .rdrDayNumber span {
+  font-weight: 600;
+  color: #334155;
+  font-size: 11px;
+}
+
+.dashboard-mini-calendar .rdrMonthAndYearPickers select {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboard-mini-calendar .rdrDayToday .rdrDayNumber span:after {
+  background: #007bc6;
+}
+
+.dashboard-mini-calendar .rdrDayHovered,
+.dashboard-mini-calendar .rdrDayPassive .rdrDayNumber span {
+  color: #94a3b8;
+}
+
+.dashboard-mini-calendar .rdrDayToday:not(.rdrDayPassive) .rdrDayNumber span {
+  color: #007bc6;
+}
+
+.dashboard-mini-calendar .rdrDay:focus,
+.dashboard-mini-calendar .rdrDay:focus-visible {
+  outline: none;
+}
+
+.dashboard-mini-calendar .rdrDay .rdrSelected,
+.dashboard-mini-calendar .rdrDay .rdrStartEdge,
+.dashboard-mini-calendar .rdrDay .rdrEndEdge,
+.dashboard-mini-calendar .rdrDay .rdrInRange,
+.dashboard-mini-calendar .rdrDay .rdrDayStartPreview,
+.dashboard-mini-calendar .rdrDay .rdrDayEndPreview,
+.dashboard-mini-calendar .rdrDay .rdrDayInPreview {
+  border: none !important;
+  box-shadow: none !important;
+}

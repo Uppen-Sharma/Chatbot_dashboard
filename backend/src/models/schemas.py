@@ -82,3 +82,18 @@ class DeleteResponse(BaseModel):
     """Shape returned by DELETE /api/users/{user_id}"""
     success: bool
     message: str
+
+
+# Upload / Translate Endpoints
+
+class TranslateRequest(BaseModel):
+    texts: list[str]
+    target_lang: str
+
+class TranslateResponse(BaseModel):
+    translated: list[str]
+
+class UploadResponse(BaseModel):
+    success: bool
+    message: str
+    file_exists: Optional[bool] = False

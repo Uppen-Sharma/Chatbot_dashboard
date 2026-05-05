@@ -1,0 +1,110 @@
+{
+  "header": {
+    "title": "Connectivity Admin Dashboard",
+    "admin": "Admin",
+    "manageAccount": "Manage your account",
+    "uploadFile": "Upload File",
+    "logout": "Log out"
+  },
+  "language": {
+    "en": "English",
+    "ja": "日本語",
+    "cn": "繁體中文"
+  },
+  "loading": {
+    "dashboard": "Loading your live dashboard...",
+    "refreshing": "Refreshing data...",
+    "users": "Loading users...",
+    "chats": "Loading chats..."
+  },
+  "error": {
+    "failedToLoad": "Failed to load dashboard",
+    "serverUnreachable": "Could not reach the server. Please check your connection and try again.",
+    "retry": "Retry",
+    "couldNotLoadChats": "Could not load chats. Please try again."
+  },
+  "dashboard": {
+    "performanceOverview": "Performance Overview"
+  },
+  "dateFilter": {
+    "thisWeek": "This week",
+    "thisMonth": "This month",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly",
+    "selectYear": "Select Year",
+    "apply": "Apply",
+    "from": "From",
+    "to": "To",
+    "thisWeekLabel": "This Week",
+    "thisMonthLabel": "This Month",
+    "lastThreeMonths": "Last 3 Months",
+    "selectedRange": "Selected Range"
+  },
+  "usersTable": {
+    "title": "Your Users",
+    "fullName": "Full Name",
+    "rating": "Rating",
+    "conversations": "Conversations",
+    "avgDuration": "Avg Duration",
+    "noUsers": "No users found matching your criteria.",
+    "prev": "Previous",
+    "next": "Next",
+    "lastActive": "Last Active {{lastActive}}",
+    "showing": "Showing {{start}} of {{total}} results"
+  },
+  "chat": {
+    "header": "Chats",
+    "noChats": "No recent chats found.",
+    "noMessages": "No messages yet",
+    "deletePrompt": "Delete this chat? This cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "selectChat": "Select a chat to view conversation",
+    "chooseChat": "Choose a chat from the left panel",
+    "loadError": "Failed to load messages."
+  },
+  "peakUsage": {
+    "title": "Peak Usage Time",
+    "subtitle": "Peak usage at {{time}} - consider scaling support",
+    "legendUsage": "Usage",
+    "legendPeak": "Peak:",
+    "faqTitle": "Most Frequent Questions",
+    "noFaq": "No FAQ data available.",
+    "peakUsageAt": "Peak usage at",
+    "considerScaling": "consider scaling support"
+  },
+  "upload": {
+    "title": "Upload File",
+    "subtitle": "Word, Excel, PowerPoint & PDF only",
+    "preLogin": "Pre-Login",
+    "postLogin": "Post-Login",
+    "dragDrop": "Drag & drop a file here",
+    "dropHere": "Drop file here",
+    "browse": "browse to choose a file",
+    "browseOr": "or",
+    "overwriteTitle": "File already exists",
+    "overwriteBody": "A file with this name already exists on the server. Do you want to overwrite it?",
+    "overwriteConfirm": "Yes, Overwrite",
+    "invalidType": "Unsupported file type",
+    "uploadedSuccess": "File uploaded successfully!",
+    "fileSelected": "1 file selected",
+    "noFileSelected": "No file selected",
+    "cancel": "Cancel",
+    "upload": "Upload",
+    "uploading": "Uploading…"
+  },
+  "login": {
+    "title": "Dashboard",
+    "heading": "Log in with SSO",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email address",
+    "loginButton": "Login",
+    "notUsingSso": "Not using SSO?",
+    "loginWithPassword": "Log in with a password",
+    "errorEmpty": "Please enter your email address.",
+    "errorInvalid": "Oops! That does not look like a valid email.",
+    "terms": "Terms of Service",
+    "privacy": "Privacy policy"
+  }
+}

@@ -1,110 +1,72 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { ArrowRight } from "lucide-react";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogin = (e) => {
     e.preventDefault();
 
-    const emailRule = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const authMode = import.meta.env.VITE_AUTH_MODE || "dev";
 
-    if (!email) {
-      setError("Please enter your email address.");
-    } else if (!emailRule.test(email)) {
-      setError("Oops! That does not look like a valid email.");
+    if (authMode === "prod") {
+      // In production, we hand off authentication entirely to oauth2-proxy
+      // which sits in front of NGINX.
+      alert("PROD MODE: Redirecting to Microsoft Azure AD (/oauth2/sign_in)...");
+      window.location.href = "/oauth2/sign_in";
     } else {
-      setError("");
-      // Set auth flag for ProtectedRoute
+      // Keep existing auth flow behavior for local development
       localStorage.setItem("isLoggedIn", "true");
       navigate("/dashboard");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#E7E9F0] flex flex-col items-center justify-center p-4">
-      {/* Logo and Title area */}
-      <div className="flex flex-row items-center justify-center gap-3 mb-6">
-        <div className="w-12 h-12 flex-shrink-0">
-          <img
-            src="/Tanuki-new 1.png"
-            alt="Logo"
-            className="w-full h-full object-contain"
-          />
-        </div>
-        <h1 className="font-semibold text-black text-4xl tracking-tight leading-none">
-          Dashboard
-        </h1>
-      </div>
+    <div className="relative min-h-screen overflow-hidden">
+      <img
+        src="/background_image.jpg"
+        alt="FUSO truck background"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-[#0A2A59]/35" />
 
-      {/* The White Login Card */}
-      <div className="bg-white w-full max-w-[440px] rounded-2xl shadow-sm border border-[#E7E9F0] p-10 flex flex-col items-center">
-        <h2 className="text-xl font-semibold text-black mb-8 text-center">
-          Log in with SSO
-        </h2>
-
-        <form onSubmit={handleLogin} className="w-full flex flex-col gap-5">
-          {/* Email Input Section */}
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-semibold text-black"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setError("");
-              }}
-              placeholder="Enter your email address"
-              className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all ${
-                error
-                  ? "border-red-300 focus:ring-red-100 bg-red-50/30"
-                  : "border-[#E7E9F0] focus:border-[#007BC6] focus:ring-[#007BC6]/20"
-              }`}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-107.5">
+          
+        <div className="rounded-2xl border border-[#DCE1EA] bg-white/95 px-7 py-8 shadow-[0_24px_60px_rgba(0,27,77,0.28)] backdrop-blur-[2px] sm:px-9 sm:py-9">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            {/* <img
+              src="/Tanuki-new 1.png"
+              alt="Dashboard mascot"
+              className="h-14 w-auto"
+            /> */}
+            <span className="text-base font-semibold text-center text-black">Welcome to the Connectivity Dashboard</span>
+          </div>
+          <div className="my-4 h-px bg-[#E5E8EF]" />
+          <div className="flex justify-center">
+            <img
+              src="/fuso-logo.svg"
+              alt="FUSO"
+              className="h-8 w-auto"
             />
-            {error && (
-              <span className="text-red-500 text-xs font-medium mt-1">
-                {error}
-              </span>
-            )}
           </div>
 
-          {/* Login Button */}
-          <button
-            type="submit"
-            className="w-full bg-[#007BC6] hover:bg-[#006ba8] text-white font-medium py-3 rounded-lg hover:shadow-xl hover:shadow-[#007BC6]/30 hover:-translate-y-1 transition-all duration-300 mt-2"
-          >
-            Login
-          </button>
-        </form>
+          <div className="my-8 h-px bg-[#E5E8EF]" />
 
-        {/* Button for alternative login method */}
-        <p className="mt-6 text-sm font-medium text-gray-600">
-          Not using SSO?{" "}
-          <button
-            type="button"
-            className="text-[#007BC6] hover:underline bg-transparent border-none p-0 cursor-pointer"
-          >
-            Log in with a password
-          </button>
-        </p>
-      </div>
-
-      <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-500 font-medium">
-        <a href="#" className="hover:text-black transition-colors">
-          Terms of Service
-        </a>
-        <span className="text-gray-400">|</span>
-        <a href="#" className="hover:text-black transition-colors">
-          Privacy policy
-        </a>
+          <form onSubmit={handleLogin}>
+            <button
+              type="submit"
+              className="group flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#1087CF] px-4 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#0B78B9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1087CF]/45 focus-visible:ring-offset-2"
+            >
+              <span>{t("login.daimlerButton", "Login With Daimler Credentials")}</span>
+              <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+            </button>
+          </form>
+        </div>
+        </div>
       </div>
     </div>
   );
