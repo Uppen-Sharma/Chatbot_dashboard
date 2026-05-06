@@ -43,6 +43,10 @@ Chatbot_dashboard-main/
 │           ├── db.py               ← Re-exports get_db for clean imports
 │           └── services.py         ← DEPRECATED stub (safe to ignore)
 │
+├── deploy/                         ← Production deployment configs
+│   ├── nginx/                      ← Reverse proxy configs
+│   └── oauth2-proxy/               ← Azure AD auth provider
+│
 └── frontend/                       ← React / Vite app
     ├── index.html                  ← HTML shell
     ├── package.json                ← npm dependencies & scripts
@@ -280,6 +284,20 @@ Stateless helper functions with **no framework or database imports**.
 ### `backend/src/dependencies/db.py`
 
 Re-exports `get_db` from `db/session.py`. Routes import from here instead of reaching into the implementation module directly, giving a single stable import path.
+
+---
+
+---
+
+## Deployment — Production Infrastructure
+
+### `deploy/oauth2-proxy/oauth2-proxy.cfg`
+
+Configuration for OAuth2 Proxy to handle Microsoft Entra ID (Azure AD) authentication. Intercepts incoming requests, forces unauthenticated users to the Microsoft login, and passes validated identity headers to the FastAPI backend.
+
+### `deploy/nginx/`
+
+Reverse proxy configuration. Nginx serves the compiled frontend static files, routes `/api` to the FastAPI backend, and routes `/oauth2` to the oauth2-proxy for authentication flows.
 
 ---
 

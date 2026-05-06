@@ -33,11 +33,13 @@ FastAPI Backend  →  MySQL
 Two functions that protect every API route:
 
 **`get_current_user()`**
+
 - Reads `X-Auth-Request-Email` and `X-Auth-Request-User` headers injected by oauth2-proxy.
 - If `AUTH_MODE=dev` and headers are missing → injects a mock admin user so local development works without Azure.
 - If `AUTH_MODE=prod` and headers are missing → returns `401 Unauthorized`.
 
 **`require_role("admin")`**
+
 - Checks if the user's email is in the `ADMIN_EMAILS` list, or ends with `@srmtech.com`.
 - Returns `403 Forbidden` if neither condition is met.
 - Future-ready: changing ~3 lines switches this to check Azure Security Groups instead.
@@ -48,17 +50,17 @@ Two functions that protect every API route:
 
 All 9 endpoints now have auth dependencies injected:
 
-| Endpoint | Protection |
-|----------|-----------|
-| `GET /stats` | Logged-in user |
-| `GET /peak-usage` | Logged-in user |
-| `GET /faqs` | Logged-in user |
-| `GET /users` | Logged-in user |
-| `GET /users/{id}/conversations` | Logged-in user |
+| Endpoint                           | Protection     |
+| ---------------------------------- | -------------- |
+| `GET /stats`                       | Logged-in user |
+| `GET /peak-usage`                  | Logged-in user |
+| `GET /faqs`                        | Logged-in user |
+| `GET /users`                       | Logged-in user |
+| `GET /users/{id}/conversations`    | Logged-in user |
 | `GET /conversations/{id}/messages` | Logged-in user |
-| `DELETE /conversations/{id}` | **Admin only** |
-| `POST /upload-file` | **Admin only** |
-| `POST /translate` | **Admin only** |
+| `DELETE /conversations/{id}`       | **Admin only** |
+| `POST /upload-file`                | **Admin only** |
+| `POST /translate`                  | **Admin only** |
 
 ---
 
@@ -90,10 +92,10 @@ The login button now checks `VITE_AUTH_MODE`:
 
 ```js
 if (authMode === "prod") {
-    window.location.href = "/oauth2/sign_in"; // hands off to Azure AD
+  window.location.href = "/oauth2/sign_in"; // hands off to Azure AD
 } else {
-    localStorage.setItem("isLoggedIn", "true");
-    navigate("/dashboard");                   // mock dev login
+  localStorage.setItem("isLoggedIn", "true");
+  navigate("/dashboard"); // mock dev login
 }
 ```
 
@@ -105,7 +107,7 @@ if (authMode === "prod") {
 
 ```js
 if (authMode === "prod") {
-    return children; // NGINX already verified the user — trust the proxy
+  return children; // NGINX already verified the user — trust the proxy
 }
 const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
 return isLoggedIn ? children : <Navigate to="/login" replace />;
@@ -150,15 +152,15 @@ location /api/ {
 
 ## Dev vs Production Behaviour
 
-| | Dev Mode | Prod Mode |
-|-|----------|-----------|
-| Login | localStorage flag | Microsoft Azure AD via oauth2-proxy |
-| Backend user | Mock admin injected | Read from `X-Auth-Request-Email` header |
-| NGINX required | No | Yes |
-| oauth2-proxy required | No | Yes |
-| `AUTH_MODE` | `dev` | `prod` |
-| `VITE_AUTH_MODE` | `dev` | `prod` |
-| `VITE_API_URL` | `http://localhost:5000/api` | `/api` |
+|                       | Dev Mode                    | Prod Mode                               |
+| --------------------- | --------------------------- | --------------------------------------- |
+| Login                 | localStorage flag           | Microsoft Azure AD via oauth2-proxy     |
+| Backend user          | Mock admin injected         | Read from `X-Auth-Request-Email` header |
+| NGINX required        | No                          | Yes                                     |
+| oauth2-proxy required | No                          | Yes                                     |
+| `AUTH_MODE`           | `dev`                       | `prod`                                  |
+| `VITE_AUTH_MODE`      | `dev`                       | `prod`                                  |
+| `VITE_API_URL`        | `http://localhost:5000/api` | `/api`                                  |
 
 ---
 
