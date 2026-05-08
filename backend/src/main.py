@@ -136,4 +136,6 @@ def home():
     logger.info("App is running")
     return "App is running"
 
+# Reload triggered by Antigravity
 app.include_router(routes.router, prefix="/api")
+
