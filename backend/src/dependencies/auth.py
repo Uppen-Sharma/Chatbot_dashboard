@@ -46,8 +46,14 @@ def require_role(role: str):
         if role == "admin":
             is_admin_email = email in [e.lower().strip() for e in ADMIN_EMAILS]
             
-            # Dynamically check if the email ends with ANY of the allowed domains
-            is_allowed_domain = any(email.endswith(domain.strip()) for domain in ALLOWED_DOMAINS)
+            # Dynamically check if the email's domain matches ANY of the allowed domains.
+            # Extract the domain part and compare directly to prevent suffix spoofing
+            # (e.g. evil@notsrmtech.com must not match @srmtech.com).
+            email_domain = "@" + email.split("@")[-1] if "@" in email else ""
+            is_allowed_domain = any(
+                email_domain == domain.strip()
+                for domain in ALLOWED_DOMAINS
+            )
             
             if not (is_admin_email or is_allowed_domain):
                 logger.warning(f"Access denied for user {email} (requires {role})")

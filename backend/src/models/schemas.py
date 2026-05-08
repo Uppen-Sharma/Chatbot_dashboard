@@ -10,7 +10,7 @@ Equivalent to DTOs (Data Transfer Objects) or response-model files in a
 Node.js / TypeScript project.
 """
 
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -70,6 +70,26 @@ class ChatResponse(BaseModel):
     totalMessages: int
 
 
+# Pagination Envelopes
+
+class PaginatedUsers(BaseModel):
+    """Pagination wrapper for GET /api/users.
+    `count` < `limit` indicates this is the last page.
+    """
+    items: List[UserResponse]
+    skip: int
+    limit: int
+    count: int   # number of items actually returned (may be < limit on last page)
+
+
+class PaginatedChats(BaseModel):
+    """Pagination wrapper for GET /api/users/{user_id}/conversations."""
+    items: List[ChatResponse]
+    skip: int
+    limit: int
+    count: int
+
+
 class MessageResponse(BaseModel):
     """Single message entry returned by GET /api/chats/{chat_id}/messages"""
     id: str
@@ -97,3 +117,4 @@ class UploadResponse(BaseModel):
     success: bool
     message: str
     file_exists: Optional[bool] = False
+    file_size: Optional[str] = None  # e.g. "42.5 KB" — populated on successful upload

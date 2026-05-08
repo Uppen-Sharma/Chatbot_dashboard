@@ -61,7 +61,10 @@ export function useDashboard() {
   useEffect(() => {
     setIsUsersLoading(true);
     getUsers()
-      .then((data) => setUserData(data))
+      .then((data) => {
+        // The backend returns { items: [], count: N, ... }
+        setUserData(data.items || []);
+      })
       .catch((err) => console.error("Failed to fetch users:", err))
       .finally(() => setIsUsersLoading(false));
   }, []);
@@ -161,30 +164,35 @@ export function useDashboard() {
   const totalPages = Math.max(1, Math.ceil(totalUsers / usersPerPage));
 
   const displayedUsers = useMemo(() => {
-    const pageSlice = userData.slice(
+    // Sort globally first so ranking is consistent across all pages,
+    // then slice to the current page.
+    const sorted =
+      sortConfig.length === 0
+        ? userData
+        : [...userData].sort((a, b) => {
+            for (let rule of sortConfig) {
+              let aVal = 0,
+                bVal = 0;
+              if (rule.key === "rating") {
+                aVal = a.rating;
+                bVal = b.rating;
+              } else if (rule.key === "convos") {
+                aVal = parseInt(String(a.convos).replace(/,/g, "")) || 0;
+                bVal = parseInt(String(b.convos).replace(/,/g, "")) || 0;
+              } else if (rule.key === "avgDur") {
+                aVal = parseDuration(a.avgDur);
+                bVal = parseDuration(b.avgDur);
+              }
+              const diff = rule.dir === "high" ? bVal - aVal : aVal - bVal;
+              if (diff !== 0) return diff;
+            }
+            return 0;
+          });
+
+    return sorted.slice(
       (currentPage - 1) * usersPerPage,
       currentPage * usersPerPage,
     );
-    if (sortConfig.length === 0) return pageSlice;
-    return [...pageSlice].sort((a, b) => {
-      for (let rule of sortConfig) {
-        let aVal = 0,
-          bVal = 0;
-        if (rule.key === "rating") {
-          aVal = a.rating;
-          bVal = b.rating;
-        } else if (rule.key === "convos") {
-          aVal = parseInt(String(a.convos).replace(/,/g, "")) || 0;
-          bVal = parseInt(String(b.convos).replace(/,/g, "")) || 0;
-        } else if (rule.key === "avgDur") {
-          aVal = parseDuration(a.avgDur);
-          bVal = parseDuration(b.avgDur);
-        }
-        const diff = rule.dir === "high" ? bVal - aVal : aVal - bVal;
-        if (diff !== 0) return diff;
-      }
-      return 0;
-    });
   }, [sortConfig, userData, currentPage, usersPerPage]);
 
   useEffect(() => {

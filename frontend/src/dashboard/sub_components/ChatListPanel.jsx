@@ -29,9 +29,10 @@ export default function ChatListPanel({
 
     getUserConversations(selectedUser.id)
       .then((data) => {
-        setChats(data);
+        const items = data.items || [];
+        setChats(items);
         const isDesktop = window.innerWidth >= 768;
-        setActiveChatId(isDesktop && data.length > 0 ? data[0].id : null);
+        setActiveChatId(isDesktop && items.length > 0 ? items[0].id : null);
         setIsLoading(false);
       })
       .catch((err) => {
@@ -107,10 +108,10 @@ export default function ChatListPanel({
           </div>
         ) : (
           chats.map((chat) => (
-            <button
+            <div
               key={chat.id}
               onClick={() => setActiveChatId(chat.id)}
-              className={`group w-full text-left px-4 py-3 border-b border-[#E7E9F0] flex items-center justify-between gap-3 transition-colors duration-100 ${
+              className={`group w-full cursor-pointer text-left px-4 py-3 border-b border-[#E7E9F0] flex items-center justify-between gap-3 transition-colors duration-100 ${
                 activeChatId === chat.id
                   ? "bg-[#B3D7EE]/20"
                   : ""
@@ -188,7 +189,7 @@ export default function ChatListPanel({
                   <ChevronRight size={18} className="icon-nudge-r" />
                 </div>
               </div>
-            </button>
+            </div>
           ))
         )}
       </div>

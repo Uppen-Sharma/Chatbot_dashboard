@@ -16,10 +16,12 @@ from typing import List, Optional
 from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, func, and_
+from sqlalchemy import select, delete, func, and_, case
+from sqlalchemy.exc import SQLAlchemyError
 
 from src.db.models import Conversation, Message, Feedback
 from src.core.utils import format_dur, format_date, parse_date_range
+from src.core.cache import cached
 
 
 # Internal Filter Helpers
@@ -95,6 +97,7 @@ def _split_heights(total_pct: int):
 
 # Live Metric Queries
 
+@cached(ttl_seconds=300)  # Cache for 5 minutes — dashboard metrics don't need sub-second freshness
 async def get_stats(
     start: Optional[str], end: Optional[str], db: AsyncSession
 ) -> List[dict]:
@@ -132,7 +135,7 @@ async def get_stats(
     # Satisfaction rate from feedback
     q_fb = select(
         func.count(Feedback.id).label("total"),
-        func.sum(func.if_(Feedback.feedback_type == "like", 1, 0)).label("likes"),
+        func.sum(case((Feedback.feedback_type == "like", 1), else_=0)).label("likes"),
     )
     if fb_filters:
         q_fb = q_fb.where(and_(*fb_filters))
@@ -175,6 +178,7 @@ async def get_stats(
     ]
 
 
+@cached(ttl_seconds=300)  # Cache for 5 minutes
 async def get_peak_usage(
     start: Optional[str], end: Optional[str], db: AsyncSession
 ) -> List[dict]:
@@ -202,7 +206,13 @@ async def get_peak_usage(
     conv_filters = _cf(start_dt, end_dt)
 
     # Choose view type based on range length
-    if delta_days == 0:
+    if delta_days == -1:
+        # No date range given: default weekly pattern overview
+        group_expr = func.dayofweek(Conversation.created_at)
+        view_type  = "Weekly View"
+        mode       = "weekly"
+
+    elif delta_days == 0:
         # Same day: break down by hour
         group_expr = func.hour(Conversation.created_at)
         view_type  = "Hourly View"
@@ -226,17 +236,11 @@ async def get_peak_usage(
         view_type  = "Monthly View"
         mode       = "monthly"
 
-    elif delta_days > 730:
+    else:
         # More than 2 years: one bar per calendar year
         group_expr = func.year(Conversation.created_at)
         view_type  = "Yearly View"
         mode       = "yearly"
-
-    else:
-        # No date range given (delta_days == -1): default weekly pattern
-        group_expr = func.dayofweek(Conversation.created_at)
-        view_type  = "Weekly View"
-        mode       = "weekly"
 
 
     q = (
@@ -324,16 +328,17 @@ async def get_peak_usage(
     # Monthly mode: only months within the selected date range
     if mode == "monthly":
         # Walk month-by-month from start to end so order is always chronological.
-        # This correctly handles cross-year ranges (e.g. Sep 2025 -> Mar 2026).
+        # Key `seen` on (year, month) so Jan 2024 and Jan 2025 are distinct entries.
         if start_dt and end_dt:
             ordered_months = []
             seen = set()
             curr = start_dt.replace(day=1, hour=0, minute=0, second=0)
             stop = end_dt.replace(day=1, hour=0, minute=0, second=0)
             while curr <= stop:
-                if curr.month not in seen:
+                key = (curr.year, curr.month)
+                if key not in seen:
                     ordered_months.append(curr.month)
-                    seen.add(curr.month)
+                    seen.add(key)
                 # Advance one month
                 if curr.month == 12:
                     curr = curr.replace(year=curr.year + 1, month=1)
@@ -387,6 +392,7 @@ async def get_peak_usage(
 
 
 
+@cached(ttl_seconds=300)  # Cache for 5 minutes
 async def get_faqs(
     start: Optional[str], end: Optional[str], db: AsyncSession
 ) -> List[dict]:
@@ -439,9 +445,17 @@ async def get_faqs(
 
 # Live User / Chat Queries
 
-async def fetch_enriched_users(db: AsyncSession) -> List[dict]:
+async def fetch_enriched_users(
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 50,
+) -> List[dict]:
     """
-    Build an enriched user list from the conversations + feedback tables.
+    Build a paginated enriched user list from the conversations + feedback tables.
+
+    Args:
+        skip:  Number of records to skip (OFFSET). Default 0.
+        limit: Maximum records to return (LIMIT). Default 50, max 200.
 
     For each unique user email we compute:
       - convos      : total conversation count
@@ -449,6 +463,11 @@ async def fetch_enriched_users(db: AsyncSession) -> List[dict]:
       - avgDur      : average session duration (last_message_at - created_at)
       - rating      : 0–5 star rating derived from like/dislike feedback ratio
       - progress    : 0–100 bar value, scaled relative to the longest session
+
+    Query Optimization:
+      max_avg_dur is computed entirely inside MySQL using a scalar subquery
+      so Python never needs to iterate all rows just to find the maximum.
+      This removes an O(N) Python loop and one full pass over the result set.
     """
     # Subquery 1: aggregate conversation stats per user email
     conv_sq = (
@@ -469,14 +488,25 @@ async def fetch_enriched_users(db: AsyncSession) -> List[dict]:
     fb_sq = (
         select(
             Feedback.user_email.label("email"),
-            func.sum(func.if_(Feedback.feedback_type == "like", 1, 0)).label("likes"),
+            func.sum(
+                case((Feedback.feedback_type == "like", 1), else_=0)
+            ).label("likes"),
             func.count(Feedback.id).label("total_fb"),
         )
         .group_by(Feedback.user_email)
         .subquery("fb_sq")
     )
 
-    # Join both subqueries on email
+    # Scalar subquery: maximum avg_dur_sec across ALL users — computed in DB
+    # This replaces the previous Python-level max() loop over all result rows.
+    max_dur_sq = (
+        select(func.max(conv_sq.c.avg_dur_sec)).scalar_subquery()
+    )
+
+    # Outer query: join both subqueries and compute progress % directly in SQL
+    # Cap limit to prevent runaway queries
+    limit = min(limit, 200)
+
     stmt = (
         select(
             conv_sq.c.email,
@@ -485,24 +515,34 @@ async def fetch_enriched_users(db: AsyncSession) -> List[dict]:
             conv_sq.c.avg_dur_sec,
             fb_sq.c.likes,
             fb_sq.c.total_fb,
+            # Compute progress bar value (0-100) in SQL — no Python math needed
+            func.least(
+                100,
+                func.round(
+                    func.coalesce(conv_sq.c.avg_dur_sec, 0)
+                    / func.nullif(max_dur_sq, 0)
+                    * 100
+                ),
+            ).label("progress"),
         )
         .select_from(conv_sq)
         .outerjoin(fb_sq, conv_sq.c.email == fb_sq.c.email)
+        .order_by(conv_sq.c.last_active.desc())  # Stable ordering for pagination
+        .offset(skip)
+        .limit(limit)
     )
 
     result = await db.execute(stmt)
     rows   = result.all()
-
-    max_dur = max((r.avg_dur_sec or 0 for r in rows), default=1) or 1
 
     users = []
     for r in rows:
         avg_sec  = r.avg_dur_sec or 0
         likes    = int(r.likes    or 0)
         total_fb = int(r.total_fb or 0)
+        progress = int(r.progress or 0)
 
         rating   = round((likes / total_fb) * 5) if total_fb > 0 else 0
-        progress = min(100, round((avg_sec / max_dur) * 100)) if max_dur > 0 else 0
         username = r.email.split("@")[0]
 
         users.append({
@@ -520,12 +560,25 @@ async def fetch_enriched_users(db: AsyncSession) -> List[dict]:
     return users
 
 
-async def fetch_user_chats(user_id: str, db: AsyncSession) -> List[dict]:
-    """Return all conversations for a given user, newest first."""
+async def fetch_user_chats(
+    user_id: str,
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 20,
+) -> List[dict]:
+    """Return paginated conversations for a given user, newest first.
+
+    Args:
+        skip:  Number of conversations to skip (OFFSET). Default 0.
+        limit: Maximum conversations to return. Default 20, max 100.
+    """
+    limit = min(limit, 100)  # Cap to prevent runaway queries
     result = await db.execute(
         select(Conversation)
         .where(Conversation.user_email == user_id)
         .order_by(Conversation.created_at.desc())
+        .offset(skip)
+        .limit(limit)
     )
     chats = result.scalars().all()
     return [
